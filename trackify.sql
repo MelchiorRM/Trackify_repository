@@ -1,3 +1,4 @@
+#DATABASE MODEL
 USE trackifydb;
 
 CREATE TABLE users (
