@@ -1,0 +1,16 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Python: Flask",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/app.py",  // Path to your main Flask app or entry point
+            "env": {
+                "FLASK_APP": "app.py",  // Set environment variables for Flask if needed
+                "FLASK_ENV": "development"
+            },
+            "console": "integratedTerminal"
+        }
+    ]
+}
