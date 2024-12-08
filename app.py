@@ -3,17 +3,21 @@ from flask_login import LoginManager
 from routes.user_routes import user_routes
 from routes.media_routes import media_routes
 from models.user_model import db, User
+from config import Config
+from flask_session import Session
+from flask_bcrypt import Bcrypt
 
-
+bcrypt = Bcrypt()
 def create_app():
     app = Flask(__name__)
-    app.config['SECRET_KEY'] = '8da15c2b8946c4261a4c1516b4c86e19'
-    app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+mysqlconnector://root:Mysql123%40@localhost/trackifydb'
-    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-    
+    app.config.from_object(Config)
     db.init_app(app)
+    bcrypt.init_app(app)
+    Session(app)
+
     login_manager = LoginManager()
     login_manager.init_app(app)
+    
     @login_manager.user_loader
     def load_user(user_id):
         return User.query.get(int(user_id))

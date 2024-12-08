@@ -1,14 +1,34 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard</title>
-</head>
-<body>
-    <h1>Welcome, {{ user.username }}!</h1>
-    <p>Email: {{ user.email }}</p>
-    <p>Member since: {{ user.join_date.strftime('%B %d, %Y') }}</p>
-    <a href="{{ url_for('user_routes.logout') }}">Logout</a>
-</body>
-</html>
+{% extends "base.html" %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<h2>Welcome, {{ current_user.username }}!</h2>
+
+<div class="card-deck">
+    <div class="card">
+        <div class="card-body">
+            <h5 class="card-title">Cinema</h5>
+            <p class="card-text">Manage your movie list.</p>
+            <a href="{{ url_for('media_routes.add_media', media_type='cinema') }}" class="btn btn-primary">Add Cinema</a>
+            <a href="{{ url_for('media_routes.list_media', media_type='cinema') }}" class="btn btn-secondary">List Cinema</a>
+        </div>
+    </div>
+    <div class="card">
+        <div class="card-body">
+            <h5 class="card-title">Music</h5>
+            <p class="card-text">Manage your music list.</p>
+            <a href="{{ url_for('media_routes.add_media', media_type='music') }}" class="btn btn-primary">Add Music</a>
+            <a href="{{ url_for('media_routes.list_media', media_type='music') }}" class="btn btn-secondary">List Music</a>
+        </div>
+    </div>
+    <div class="card">
+        <div class="card-body">
+            <h5 class="card-title">Books</h5>
+            <p class="card-text">Manage your book list.</p>
+            <a href="{{ url_for('media_routes.add_media', media_type='book') }}" class="btn btn-primary">Add Book</a>
+            <a href="{{ url_for('media_routes.list_media', media_type='book') }}" class="btn btn-secondary">List Books</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

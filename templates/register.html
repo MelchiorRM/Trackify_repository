@@ -1,8 +1,9 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="form-container">
+<h2>Register</h2>
+<div class="form-group">
     <h2>Register</h2>
-    <form action="/register" method="POST">
+    <form action="/register" method="POST" action="{{ url_for('user_routes.register') }}">
         <label for="username">Username</label>
         <input type="text" id="username" name="username" placeholder="Enter your username" required>
         
