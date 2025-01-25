@@ -10,7 +10,7 @@ bcrypt = Bcrypt()
 def register():
     if request.method == "POST":
         username = request.form["username"]
-        password = bcrypt.generate_password_hash(request.form["password"]).decode('utf-8')
+        password = request.form["password"]
         email = request.form["email"]
 
         if User.query.filter_by(username=username).first():
@@ -41,6 +41,7 @@ def login():
             flash("Invalid username or password", "danger")
             return redirect(url_for("user_routes.login"))
     return render_template("login.html")
+
 
 @user_routes.route("/dashboard", methods=["GET"])
 @login_required
