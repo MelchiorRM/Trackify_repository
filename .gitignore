@@ -1,4 +1,5 @@
 .venv/
 .vscode/
+./.vscode/
 */__pycache__/
 *.sql
