@@ -1,0 +1,42 @@
+<!-- templates/books.html -->
+{% extends "base.html" %}
+
+{% block content %}
+<h1>Books</h1>
+
+<form method="POST" action="{{ url_for('media_routes.books') }}">
+    <input type="text" name="search_query" placeholder="Search for books" value="{{ search_query }}">
+    <button type="submit">Search</button>
+</form>
+
+<h2>Search Results</h2>
+<ul>
+    {% for book in books %}
+    <li>
+        {% if book.coverart %}
+        <img src="{{ book.coverart }}" alt="{{ book.title }} cover" style="width: 100px;">
+        {% endif %}
+        <h3>{{ book.title }}</h3>
+        <p>Author: {{ book.author }}</p>
+        <p>Genre: {{ book.genre }}</p>
+        <!-- Add more details as needed -->
+
+        <!-- Add to Library Form (for each book in search results) -->
+        <form method="POST" action="{{ url_for('media_routes.books') }}">
+            <input type="hidden" name="title" value="{{ book.title }}">
+            <input type="hidden" name="author" value="{{ book.author }}">
+            <input type="hidden" name="genre" value="{{ book.genre }}">
+            <input type="hidden" name="year" value="{{ book.year }}">
+            <input type="hidden" name="language" value="{{ book.language }}">
+            <input type="hidden" name="publisher" value="{{ book.publisher }}">
+            <input type="hidden" name="country" value="{{ book.country }}">
+            <input type="hidden" name="rating" value="{{ book.rating }}">
+            <input type="hidden" name="reviews" value="{{ book.reviews }}">
+            <input type="hidden" name="coverart" value="{{ book.coverart }}">
+            <!-- Add other hidden fields for the remaining book data -->
+            <button type="submit">Add to Library</button>
+        </form>
+    </li>
+    {% endfor %}
+</ul>
+{% endblock %}

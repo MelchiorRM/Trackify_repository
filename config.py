@@ -9,4 +9,5 @@ class Config:
     SESSION_TYPE = 'filesystem'  # Use filesystem for session storage (you can change this)
     SESSION_PERMANENT = False  # Sessions expire when the browser closes
     PERMANENT_SESSION_LIFETIME = 1800  # 30 minutes (30 * 60 seconds)
+    GOOGLE_BOOKS_API_KEY = os.environ.get('GOOGLE_BOOKS_API_KEY') or 'AIzaSyA2A-qxj3CZhKDMNni4vcK3EA1rSnj25Fg'
     DEBUG = True
