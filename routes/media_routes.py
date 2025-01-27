@@ -10,12 +10,12 @@ media_routes = Blueprint('media_routes', __name__)
 @login_required
 def books():
     books = []
-    search_query = None
+    search_query = request.args.get('search_query','')
+    page = int(request.args.get('page', 1))
     if request.method == "POST":
         search_query = request.form.get("search_query")
         if search_query:
-            books = search_books(search_query)
-            return render_template("book.html", books=books, search_query=search_query)
+            return redirect(url_for('media_routes.books', search_query=search_query, page=1))
         else:
             book_data = {
                 "title": request.form["title"],
@@ -29,10 +29,23 @@ def books():
                 "reviews": request.form["reviews"],
                 "coverart": request.form["coverart"],
             }
-            book = save_books(book_data)
+            save_books(book_data)
             return redirect(url_for("media_routes.books"))
-    books = Book.query.all()
-    return render_template("book.html", books=books)
+    if search_query:
+        books, total_results, current_page = search_books(search_query, page)
+        results_per_page = 20
+        start_index = (current_page - 1) * results_per_page
+        end_index = start_index + results_per_page
+        paged_books = books[start_index:end_index]
+        has_next = total_results > end_index
+        has_prev = current_page > 1
+    else:
+        # if no search query, show all local books
+        paged_books = Book.query.all()
+        has_next = False
+        has_prev = False
+        current_page = 1
+    return render_template("book.html", books=paged_books, search_query=search_query, page=current_page, has_next=has_next, has_prev=has_prev)
 
 @media_routes.route("/music", methods=["GET", "POST"])
 @login_required
