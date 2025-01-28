@@ -1,5 +1,6 @@
 import requests
 from models.book_model import Book, db
+from models.user_media_model import UserMedia
 from flask import current_app
 
 def search_books(query, page=1):
@@ -66,11 +67,32 @@ def search_open_library(query, page=1):
         books.append(book_data)
     return books, data.get("numFound", 0), page
 
-def save_books(book_data):
+def save_books(book_data, user_id):
     existing_book = Book.query.filter_by(title=book_data["title"], author=book_data["author"]).first()
-    if existing_book:
-        return existing_book
-    book = Book(**book_data)
-    db.session.add(book)
+    if not existing_book:
+        genre = book_data.get("genre", "Unknown")
+        if not genre or len(genre) > 100:
+            genre = "Unknown"
+        book = Book(
+            title=book_data["title"],
+            author=book_data["author"],
+            genre=genre,
+            year=book_data["year"],
+            language=book_data["language"],
+            publisher=book_data["publisher"],
+            country=book_data["country"],
+            rating=book_data["rating"],
+            reviews=book_data["reviews"],
+            coverart=book_data["coverart"]
+        )
+        db.session.add(book)
+        db.session.flush() # flush to get the book_id
+    else:
+        book = existing_book
+
+    user_media_entry = UserMedia.query.filter_by(user_id=user_id, media_type='book',book_id=book.book_id).first()
+    if not user_media_entry:
+        user_media_entry = UserMedia(user_id=user_id, book_id=book.book_id, media_type='book')
+        db.session.add(user_media_entry)
     db.session.commit()
-    return book
+    return book   

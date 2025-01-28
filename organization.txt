@@ -1,18 +1,21 @@
 Trackify/
 │
 ├── app.py          # Application entry point, imports routes, initializes app & extensions
-├── main.py         # Optional, for raw database connection testing
+├── flask_session/ 
+|── __init__.py     # Import models here for easy access
 ├── config.py       # Configuration settings for Flask (e.g., SECRET_KEY, database URI)
+├── .gitignore      # Ignore files and directories for Git
 ├── models/
-│   └── __init__.py # Import models here for easy access
 │   └── user.py     # User model
-│   └── media.py    # Cinema, Music, and Book models
+│   └── cinema_model.py
+    └── music_model.py
+    └── books.py
+    └── book_model.py
 ├── routes/
-│   └── __init__.py # Blueprints registration
-│   └── auth.py     # Authentication routes (register, login)
-│   └── media.py    # Media CRUD routes
-│   └── dashboard.py # Statistics and user dashboard
+│   └── user_routes.py     # Authentication routes (register, login)
+│   └── media_routes.py    # Media CRUD routes
 ├── templates/      # HTML templates (Bootstrap-based)
 ├── static/         # CSS, JavaScript, images, etc.
-├── tests/          # Pytest or Unittest scripts
-└── requirements.txt # List of dependencies
+├── Plan.txt
+├── organization.txt
+└── requirements.txt# List of dependencies

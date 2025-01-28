@@ -1,6 +1,7 @@
 from models.user_model import db
 
 class Book(db.Model):
+    __tablename__ = 'books'
     book_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     title = db.Column(db.String(255), nullable=False)
     author = db.Column(db.String(255), nullable=False)
@@ -13,7 +14,7 @@ class Book(db.Model):
     reviews = db.Column(db.Text)
     coverart = db.Column(db.String(255))
 
-    def __init__(self, title, author, genre, year, language, publisher, country,rating, reviews, covertart):
+    def __init__(self, title, author, genre, year, language, publisher, country,rating, reviews, coverart):
         self.title = title
         self.author = author
         self.genre = genre
@@ -23,4 +24,4 @@ class Book(db.Model):
         self.country = country
         self.rating = rating
         self.reviews = reviews
-        self.coverart = covertart
+        self.coverart = coverart

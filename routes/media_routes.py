@@ -1,9 +1,10 @@
-from flask import Blueprint, request, render_template, session, redirect, url_for
-from flask_login import login_required
+from flask import Blueprint, request, render_template, session, redirect, url_for, flash
+from flask_login import login_required, current_user
 from models.book_model import Book, db
 from models.music_model import Music
 from models.cinema_model import Cinema
 from models.books import search_books, save_books
+from models.user_media_model import UserMedia
 
 media_routes = Blueprint('media_routes', __name__)
 @media_routes.route("/books", methods=["GET", "POST"])
@@ -29,7 +30,9 @@ def books():
                 "reviews": request.form["reviews"],
                 "coverart": request.form["coverart"],
             }
-            save_books(book_data)
+            user_id = current_user.user_id
+            save_books(book_data, user_id)
+            flash("Book added to library!", "success")
             return redirect(url_for("media_routes.books"))
     if search_query:
         books, total_results, current_page = search_books(search_query, page)
@@ -37,11 +40,11 @@ def books():
         start_index = (current_page - 1) * results_per_page
         end_index = start_index + results_per_page
         paged_books = books[start_index:end_index]
-        has_next = total_results > end_index
+        has_next = end_index < total_results
         has_prev = current_page > 1
     else:
-        # if no search query, show all local books
-        paged_books = Book.query.all()
+        user_media_entries = UserMedia.query.filter_by(user_id=current_user.user_id, media_type='book').all()
+        paged_books = [Book.query.get(entry.book_id) for entry in user_media_entries if entry.book_id]
         has_next = False
         has_prev = False
         current_page = 1
@@ -88,3 +91,22 @@ def cinema():
         return redirect(url_for("media_routes.cinema"))
     cinema = Cinema.query.all()
     return render_template("cinema.html", cinema=cinema)
+
+@media_routes.route("/library")
+@login_required
+def library():
+    user_id = current_user.user_id
+    user_media_entries = UserMedia.query.filter_by(user_id=user_id).all()
+    books = []
+    music = []
+    cinema = []
+
+    for entry in user_media_entries:
+        if entry.media_type == "book":
+            book = Book.query.get(entry.book_id)
+            books.append(book)
+        elif entry.media_type == "music":
+            music.append(Music.query.get(entry.music_id))
+        elif entry.media_type == "cinema":
+            cinema.append(Cinema.query.get(entry.cinema_id))
+    return render_template("library.html", books=books, music=music, cinema=cinema)
