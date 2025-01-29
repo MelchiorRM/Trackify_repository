@@ -1,0 +1,27 @@
+Core Features:
+User Registration and Authentication:
+
+Allow users to register and log in to track their media consumption.
+Media Consumption Logging:
+
+Track movies, books, and music with details such as:
+Title
+Genre
+Rating
+Date watched/read/listened
+User review
+Additional details (e.g., author for books, director for movies)
+History and Planning (Diary):
+
+Users can see a history of their logged media.
+Users can plan future consumption and add media to their "To-Do" list.
+Statistics and Analytics:
+
+Generate statistics based on the user’s consumption:
+Number of books, movies, music consumed by genre, author, country, year, etc.
+Recommendations:
+
+Provide recommendations based on the user’s history (e.g., suggest movies/books/music of a similar genre or from the same author/director).
+Reviews:
+
+Users can write reviews for each media type they’ve consumed and share them with others.
