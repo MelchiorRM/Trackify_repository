@@ -5,6 +5,7 @@ from models.music_model import Music
 from models.cinema_model import Cinema
 from models.books import search_books, save_books
 from models.cinema import search_cinema, save_cinema
+from models.music import search_music, save_music
 from models.user_media_model import UserMedia
 
 media_routes = Blueprint('media_routes', __name__)
@@ -70,23 +71,45 @@ def books():
 @media_routes.route("/music", methods=["GET", "POST"])
 @login_required
 def music():
+    music = []
+    search_query = request.args.get('search_query', '')
+    page = int(request.args.get('page', 1))
     if request.method == "POST":
-        title = request.form["title"]
-        artist = request.form["artist"]
-        genre = request.form["genre"]
-        year = request.form["year"]
-        language = request.form["language"]
-        label = request.form ["label"]
-        country = request.form["country"]
-        rating = request.form["rating"]
-        reviews = request.form["reviews"]
-        coverart = request.form["coverart"]
-        music = Music(title, artist, genre, year, language, label, country, rating, reviews, coverart)
-        db.session.add(music)
-        db.session.commit()
-        return redirect(url_for("media_routes.music"))
-    music = Music.query.all()
-    return render_template("music.html", music=music)
+        search_query = request.form.get("search_query")
+        if search_query:
+            return redirect(url_for("media_routes.music", search_query=search_query, page=page))
+        else:
+            music_data = {
+                "title": request.form.get("title"),
+                "artist": request.form.get("artist"),
+                "genre": request.form.get("genre"),
+                "year": request.form.get("year"),
+                "language": request.form.get("language"),
+                "label": request.form.get("label"),
+                "country": request.form.get("country"),
+                "rating": request.form.get("rating"),
+                "reviews": request.form.get("reviews"),
+                "coverart": request.form.get("coverart")
+            }
+            user_id = current_user.user_id
+            save_music(music_data, user_id)
+            flash("Music added to library!", "success")
+            return redirect(url_for("media_routes.music"))
+    if search_query:
+        music, total_results, current_page = search_music(search_query, page)
+        results_per_page = 20
+        start_index = (current_page - 1) * results_per_page
+        end_index = start_index + results_per_page
+        paged_music = music[start_index:end_index]
+        has_next = end_index < total_results
+        has_prev = current_page > 1
+    else:
+        user_media_entries = UserMedia.query.filter_by(user_id=current_user.user_id, media_type='music').all()
+        paged_music = [Music.query.get(entry.music_id) for entry in user_media_entries if entry.music_id]
+        has_next = False
+        has_prev = False
+        current_page = 1
+    return render_template("music.html", search_query=search_query, music=paged_music, page=current_page, has_next=has_next, has_prev=has_prev)
 
 @media_routes.route("/cinema", methods = ["GET", "POST"])
 @login_required

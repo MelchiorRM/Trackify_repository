@@ -41,7 +41,7 @@ def search_google_books(query):
             "genre": ",".join(volume_info.get("categories",[])),
             "year": int(volume_info.get("publishedDate","0")[:4]) if volume_info.get("publishedDate") else 0,
             "country": volume_info.get("country"),
-            "rating": volume_info.get("averageRating"),
+            "rating": float(volume_info.get("averageRating")) if volume_info.get("averageRating") else None,
             "reviews": volume_info.get("description"),
             "coverart": volume_info.get("imageLinks", {}).get("thumbnail"),
         }
@@ -60,7 +60,7 @@ def search_open_library(query, page=1):
             "genre": ",".join(doc.get("subject", [])),
             "year": doc.get("first_publish_year"),
             "country": doc.get("publish_country"),
-            "rating": doc.get("ratings_average", "No Rating"),
+            "rating": None,
             "reviews": doc.get("description", "No Description Available"),
             "coverart": f"https://covers.openlibrary.org/b/id/{doc.get('cover_i', '')}-L.jpg" if doc.get("cover_i") else None,
         }
@@ -81,7 +81,7 @@ def save_books(book_data, user_id):
             language=book_data["language"],
             publisher=book_data["publisher"],
             country=book_data["country"],
-            rating=book_data["rating"],
+            rating=float(book_data["rating"]) if book_data["rating"] and book_data["rating"] != 'No Rating' else None,
             reviews=book_data["reviews"],
             coverart=book_data["coverart"]
         )

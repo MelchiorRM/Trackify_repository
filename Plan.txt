@@ -1,6 +1,3 @@
-Step 1: Project Planning
-Before diving into code, it's helpful to outline what you want your program to do. Based on what you’ve mentioned, here’s a rough breakdown:
-
 Core Features:
 User Registration and Authentication:
 
