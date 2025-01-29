@@ -1,38 +1,41 @@
 {% extends "base.html" %}
 
-{% block title %}Add Cinema{% endblock %}
-
 {% block content %}
-<h2>Add Cinema</h2>
-<form method="POST" action="{{ url_for('media_routes.add_media', media_type='cinema') }}">
-    <div class="form-group">
-        <label for="title">Title:</label>
-        <input type="text" name="title" id="title" class="form-control" required>
-    </div>
-    <div class="form-group">
-        <label for="director">Director:</label>
-        <input type="text" name="director" id="director" class="form-control">
-    </div>
-    <div class="form-group">
-        <label for="genre">Genre:</label>
-        <input type="text" name="genre" id="genre" class="form-control">
-    </div>
-    <div class="form-group">
-        <label for="year">Year:</label>
-        <input type="number" name="year" id="year" class="form-control">
-    </div>
-    <div class="form-group">
-        <label for="country">Country:</label>
-        <input type="text" name="country" id="country" class="form-control">
-    </div>
-    <div class="form-group">
-        <label for="language">Language:</label>
-        <input type="text" name="language" id="language" class="form-control">
-    </div>
-    <div class="form-group">
-        <label for="description">Description:</label>
-        <textarea name="description" id="description" class="form-control"></textarea>
-    </div>
-    <button type="submit" class="btn btn-primary">Add Cinema</button>
+<h1>Cinema</h1>
+<form method="POST" action="{{ url_for('media_routes.cinema') }}">
+    <input type="text" name="search_query" placeholder="Search for cinema" value="{{ search_query }}">
+    <button type="submit">Search</button>
 </form>
+<h2>Search Results</h2>
+<ul>
+    {% for cinema in cinema %}
+    <li>
+        {% if cinema.coverart %}
+        <img src="{{ cinema.coverart }}" alt="{{ cinema.title }} cover" style="width: 100px;">
+        {% endif %}
+        <h3>{{ cinema.title }}</h3>
+        <p>Director: {{ cinema.director }}</p>
+
+        <form method="POST" action="{{ url_for('media_routes.cinema') }}">
+            <input type="hidden" name="title" value="{{ cinema.title }}">
+            <input type="hidden" name="genre" value="{{ cinema.genre }}">
+            <input type="hidden" name="year" value="{{ cinema.year }}">
+            <input type="hidden" name="country" value="{{ cinema.country }}">
+            <input type="hidden" name="director" value="{{ cinema.director }}">
+            <input type="hidden" name="type" value="{{ cinema.type }}">
+            <input type="hidden" name="language" value="{{ cinema.language }}">
+            <input type="hidden" name="rating" value="{{ cinema.rating }}">
+            <input type="hidden" name="reviews" value="{{ cinema.reviews }}">
+            <input type="hidden" name="coverart" value="{{ cinema.coverart }}">
+            <button type="submit">Add to Library</button>
+        </form>
+    </li>
+    {% endfor %}
+</ul>
+{% if has_prev %}
+<a href="{{url_for('media_routes.cinema', search_query=search_query, page=page-1)}}">Previous</a>
+{% endif %}
+{% if has_next %}
+<a href="{{url_for('media_routes.cinema', search_query=search_query, page=page+1)}}">Next</a>
+{% endif %}
 {% endblock %}

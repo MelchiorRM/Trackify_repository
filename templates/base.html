@@ -19,6 +19,15 @@
                 <li class="nav-item">
                     <a class="nav-link" href="{{ url_for('user_routes.logout') }}">Logout</a>
                 </li>
+                <form class="form-inline my-2 my-lg-0" action="{{ url_for('media_routes.search') }}" method="GET">
+                    <input class="form-control mr-sm-2" type="search" placeholder="Search" aria-label="Search" name="search_query" required>
+                    <select class="form-control mr-sm-2" name="media_type" required>
+                        <option value="books">Books</option>
+                        <option value="music">Music</option>
+                        <option value="cinema">Cinema</option>
+                    </select>
+                    <button class="btn btn-outline-success my-2 my-sm-0" type="submit">Search</button>
+                </form>
                 {% else %}
                 <li class="nav-item">
                     <a class="nav-link" href="{{ url_for('user_routes.login') }}">Login</a>
