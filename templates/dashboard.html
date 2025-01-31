@@ -38,5 +38,12 @@
             <a href="{{ url_for('media_routes.books') }}">Browse/Search Books</a>
         </div>
     </div>
+    <div class="card">
+        <div class="card-body">
+            <h5 class="card-title">Profile</h5>
+            <p class="card-text">Manage your profile information.</p>
+            <a href="{{ url_for('user_routes.profile') }}" class="btn btn-primary">Edit Profile</a>
+        </div>
+    </div>
 </div>
 {% endblock %}

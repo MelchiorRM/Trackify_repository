@@ -6,6 +6,7 @@ from models.user_model import db, User
 from config import Config
 from flask_session import Session
 from flask_bcrypt import Bcrypt
+from error import error_handler
 
 bcrypt = Bcrypt()
 def create_app():
@@ -27,8 +28,10 @@ def create_app():
 
     with app.app_context():
         db.create_all()
+
+    error_handler(app)
     return app
 
 if __name__ == '__main__':
     app = create_app()
-    app.run(host="0.0.0.0", port=5000, debug=True)
+    app.run(host="0.0.0.0", port=5000)

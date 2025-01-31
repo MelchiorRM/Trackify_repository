@@ -19,6 +19,9 @@
                 <li class="nav-item">
                     <a class="nav-link" href="{{ url_for('user_routes.logout') }}">Logout</a>
                 </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('user_routes.profile') }}">Profile</a>
+                </li>
                 <form class="form-inline my-2 my-lg-0" action="{{ url_for('media_routes.search') }}" method="GET">
                     <input class="form-control mr-sm-2" type="search" placeholder="Search" aria-label="Search" name="search_query" required>
                     <select class="form-control mr-sm-2" name="media_type" required>

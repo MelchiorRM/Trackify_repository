@@ -68,11 +68,16 @@ def search_open_library(query, page=1):
     return books, data.get("numFound", 0), page
 
 def save_books(book_data, user_id):
+    rating = book_data.get("rating")
+    try:
+        rating = float(rating) if rating and rating != 'No rating' else None
+    except ValueError:
+        rating = None
+    genre = book_data.get("genre", "Unknown")
+    if not genre or len(genre) > 100:
+        genre = "Unknown"
     existing_book = Book.query.filter_by(title=book_data["title"], author=book_data["author"]).first()
     if not existing_book:
-        genre = book_data.get("genre", "Unknown")
-        if not genre or len(genre) > 100:
-            genre = "Unknown"
         book = Book(
             title=book_data["title"],
             author=book_data["author"],
@@ -81,7 +86,7 @@ def save_books(book_data, user_id):
             language=book_data["language"],
             publisher=book_data["publisher"],
             country=book_data["country"],
-            rating=float(book_data["rating"]) if book_data["rating"] and book_data["rating"] != 'No Rating' else None,
+            rating=rating,
             reviews=book_data["reviews"],
             coverart=book_data["coverart"]
         )
@@ -95,4 +100,4 @@ def save_books(book_data, user_id):
         user_media_entry = UserMedia(user_id=user_id, book_id=book.book_id, media_type='book')
         db.session.add(user_media_entry)
     db.session.commit()
-    return book   
+    return book

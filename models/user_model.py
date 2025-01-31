@@ -1,5 +1,5 @@
 from flask_sqlalchemy import SQLAlchemy
-from flask_login import UserMixin, login_manager
+from flask_login import UserMixin
 from flask_bcrypt import Bcrypt
 from datetime import datetime
 db = SQLAlchemy()
@@ -11,11 +11,13 @@ class User(db.Model, UserMixin):
     password_hash = db.Column(db.String(255), nullable=False)
     email = db.Column(db.String(255), unique=True, nullable=False)
     join_date = db.Column(db.DateTime, default=datetime.utcnow)
+    profile_picture = db.Column(db.String(256), nullable=True)
 
-    def __init__(self, username, password, email):
+    def __init__(self, username, password, email, profile_picture):
         self.username = username
         self.password_hash = bcrypt.generate_password_hash(password).decode('utf-8')
         self.email = email
+        self.profile_picture = profile_picture
         
     def get_id(self):
         return self.user_id
