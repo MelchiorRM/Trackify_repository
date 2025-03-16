@@ -7,6 +7,8 @@ from models.books import search_books, save_books
 from models.cinema import search_cinema, save_cinema
 from models.music import search_music, save_music
 from models.user_media_model import UserMedia
+from models.social_model import Follow, Like, Notification, List, Comment
+from models.user_model import User
 
 media_routes = Blueprint('media_routes', __name__)
 
@@ -44,12 +46,13 @@ def books():
                 "language": request.form["language"],
                 "publisher": request.form["publisher"],
                 "country": request.form["country"],
-                "rating": request.form["rating"],
-                "reviews": request.form["reviews"],
                 "coverart": request.form["coverart"],
             }
+            review = request.form.get("reviews")
+            rating = request.form.get("rating")
+            date_consumed = request.form.get("date_consumed")
             user_id = current_user.user_id
-            save_books(book_data, user_id)
+            save_books(book_data, user_id, review, rating, date_consumed)
             flash("Book added to library!", "success")
             return redirect(url_for("media_routes.books"))
     if search_query:
@@ -87,12 +90,13 @@ def music():
                 "language": request.form.get("language"),
                 "label": request.form.get("label"),
                 "country": request.form.get("country"),
-                "rating": request.form.get("rating"),
-                "reviews": request.form.get("reviews"),
                 "coverart": request.form.get("coverart")
             }
+            review = request.form.get("reviews")
+            rating = request.form.get("rating")
+            date_consumed = request.form.get("date_consumed")
             user_id = current_user.user_id
-            save_music(music_data, user_id)
+            save_music(music_data, user_id, review, rating, date_consumed)
             flash("Music added to library!", "success")
             return redirect(url_for("media_routes.music"))
     if search_query:
@@ -130,12 +134,13 @@ def cinema():
                 "director": request.form.get("director"),
                 "type": request.form.get("type", ""), 
                 "language": request.form.get("language"),
-                "rating": request.form.get("rating"),
-                "reviews": request.form.get("reviews"),
                 "coverart": request.form.get("coverart")
             }
+            review = request.form.get("reviews")
+            rating = request.form.get("rating")
+            date_consumed = request.form.get("date_consumed")
             user_id = current_user.user_id
-            save_cinema(cinema_data, user_id)
+            save_cinema(cinema_data, user_id, review, rating, date_consumed)
             flash("Cinema added to library!", "success")
             return redirect(url_for("media_routes.cinema"))
     if search_query:
@@ -172,3 +177,54 @@ def library():
         elif entry.media_type == "cinema":
             cinema.append(Cinema.query.get(entry.cinema_id))
     return render_template("library.html", books=books, music=music, cinema=cinema)
+
+@media_routes.route("/feed", methods=["GET"])
+@login_required
+def feed():
+    followed_id = [f.followed_id for f in Follow.query.filter_by(follower_id=current_user.user_id).all()]
+    followed_id.append(current_user.user_id)
+    user_media_entries = UserMedia.query.filter(UserMedia.user_id.in_(followed_id))\
+                             .order_by(UserMedia.date_consumed.desc())\
+                             .limit(50).all()
+    media_items = []
+    for entry in user_media_entries:
+        item = (Book.query.get(entry.book_id) if entry.book_id else
+                Music.query.get(entry.music_id) if entry.music_id else
+                Cinema.query.get(entry.cinema_id))
+        if not item:
+            continue
+        user = User.query.get(entry.user_id)
+        likes = Like.query.filter_by(user_media_id=entry.user_media_id).count()
+        comments = Comment.query.filter_by(user_media_id=entry.user_media_id).order_by(Comment.created_at.desc()).all()
+        liked_by_me = Like.query.filter_by(user_id=current_user.user_id, user_media_id=entry.user_media_id).first()
+        media_items.append({
+            "item": item,
+            "entry": entry,
+            "user": user,
+            "likes": likes,
+            "comments": comments,
+            "liked_by_me": liked_by_me
+            })
+    return render_template("feed.html", media_items=media_items)
+
+@media_routes.route("/lists", methods=["GET", "POST"])
+@login_required
+def lists():
+    if request.method == "POST":
+        name = request.form["name"]
+        description = request.form["description"]
+        new_list = List(user_id=current_user.user_id, name=name, description=description)
+        db.session.add(new_list)
+        db.session.commit()
+        flash("List created!", "success")
+        return redirect(url_for("media_routes.lists"))
+    user_lists = List.query.filter_by(user_id=current_user.user_id).all()
+    return render_template("lists.html", lists=user_lists)
+
+@media_routes.route("/notifications")
+@login_required
+def notifications():
+    notifs = Notification.query.filter_by(user_id=current_user.user_id)\
+                               .order_by(Notification.created_at.desc())\
+                               .limit(20).all()
+    return render_template("notifications.html", notifications=notifs)

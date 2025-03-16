@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Notifications</title>
+</head>
+<body>
+    <h1>Notifications</h1><ul>
+    {% for notification in notifications %}
+    <li>
+        {{ notification.message }} - {{ notification.created_at.strftime('%Y-%m-%d %H:%M:%S') }}
+        {% if not notification.read %}
+            <strong>(Unread)</strong>
+        {% endif %}
+    </li>
+    {% endfor %}</ul>
+    <a href="{{ url_for('user_routes.dashboard') }}">Back to Dashboard</a>
+</body>
+</html>

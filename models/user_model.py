@@ -12,12 +12,14 @@ class User(db.Model, UserMixin):
     email = db.Column(db.String(255), unique=True, nullable=False)
     join_date = db.Column(db.DateTime, default=datetime.utcnow)
     profile_picture = db.Column(db.String(256), nullable=True)
+    bio = db.Column(db.Text, default=None)
 
-    def __init__(self, username, password, email, profile_picture):
+    def __init__(self, username, password, email, profile_picture,bio):
         self.username = username
         self.password_hash = bcrypt.generate_password_hash(password).decode('utf-8')
         self.email = email
         self.profile_picture = profile_picture
+        self.bio = bio
         
     def get_id(self):
         return self.user_id

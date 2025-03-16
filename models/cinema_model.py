@@ -10,11 +10,10 @@ class Cinema(db.Model):
     director = db.Column(db.String(255))
     type = db.Column(db.String(100))
     language = db.Column(db.String(100))
-    rating = db.Column(db.DECIMAL(3, 1))
-    reviews = db.Column(db.Text)
+    description = db.Column(db.Text)
     coverart = db.Column(db.String(255))
 
-    def __init__(self, title, genre, year, country, director, type, language, rating, reviews, coverart):
+    def __init__(self, title, genre, year, country, director, type, language, description, coverart):
         self.title = title
         self.genre = genre
         self.year = year
@@ -22,6 +21,5 @@ class Cinema(db.Model):
         self.director = director
         self.type = type
         self.language = language
-        self.rating = rating
-        self.reviews = reviews
+        self.description = description
         self.coverart = coverart

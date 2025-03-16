@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}Search Users{% endblock %}
+{% block content %}
+    <h1>Search Users</h1>
+    <form action="{{ url_for('user_routes.search_users') }}" method="POST">
+        <input type="text" name="search_query" placeholder="Search for users" value="{{ search_query or '' }}" required>
+        <button type="submit">Search</button>
+    </form>
+
+    {% if results %}
+        <h2>Results</h2>
+        <ul>
+            {% for result in results %}
+            <li>
+                <strong>{{ result.user.username }}</strong>
+                {% if result.is_followed %}
+                    <form action="{{ url_for('user_routes.unfollow', user_id=result.user.user_id) }}" method="POST" style="display:inline;">
+                        <button type="submit">Unfollow</button>
+                    </form>
+                {% else %}
+                    <form action="{{ url_for('user_routes.follow', user_id=result.user.user_id) }}" method="POST" style="display:inline;">
+                        <button type="submit">Follow</button>
+                    </form>
+                {% endif %}
+            </li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+    <a href="{{ url_for('user_routes.dashboard') }}">Back to Dashboard</a>
+{% endblock %}

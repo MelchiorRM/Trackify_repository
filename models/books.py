@@ -67,28 +67,19 @@ def search_open_library(query, page=1):
         books.append(book_data)
     return books, data.get("numFound", 0), page
 
-def save_books(book_data, user_id):
-    rating = book_data.get("rating")
-    try:
-        rating = float(rating) if rating and rating != 'No rating' else None
-    except ValueError:
-        rating = None
-    genre = book_data.get("genre", "Unknown")
-    if not genre or len(genre) > 100:
-        genre = "Unknown"
+def save_books(book_data, user_id, review=None, rating=None, date_consumed=None):
     existing_book = Book.query.filter_by(title=book_data["title"], author=book_data["author"]).first()
     if not existing_book:
         book = Book(
             title=book_data["title"],
             author=book_data["author"],
-            genre=genre,
-            year=book_data["year"],
-            language=book_data["language"],
-            publisher=book_data["publisher"],
-            country=book_data["country"],
-            rating=rating,
-            reviews=book_data["reviews"],
-            coverart=book_data["coverart"]
+            genre=book_data.get("genre", "Unknown"),
+            year=book_data.get("year"),
+            language=book_data.get("language"),
+            publisher=book_data.get("publisher"),
+            country=book_data.get("country"),
+            description=book_data.get("reviews"),  # Use reviews as description
+            coverart=book_data.get("coverart")
         )
         db.session.add(book)
         db.session.flush() # flush to get the book_id
@@ -97,7 +88,23 @@ def save_books(book_data, user_id):
 
     user_media_entry = UserMedia.query.filter_by(user_id=user_id, media_type='book',book_id=book.book_id).first()
     if not user_media_entry:
-        user_media_entry = UserMedia(user_id=user_id, book_id=book.book_id, media_type='book')
+        user_media_entry = UserMedia(
+            user_id=user_id,
+            book_id=book.book_id,
+            media_type='book',
+            review=review,
+            rating=float(rating) if rating else None,
+            date_consumed=date_consumed,
+            done=True if date_consumed else False
+            )
+    else:
+        if review:
+            user_media_entry.review = review
+        if rating:
+            user_media_entry.rating = float(rating)
+        if date_consumed:
+            user_media_entry.date_consumed = date_consumed
+            user_media_entry.done = True
         db.session.add(user_media_entry)
     db.session.commit()
     return book

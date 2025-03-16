@@ -78,24 +78,18 @@ def get_genre_names(genre_ids, api_key):
     genre_dict = {genre['id']: genre['name'] for genre in data.get('genres', [])}
     return [genre_dict.get(genre_id, "Unknown") for genre_id in genre_ids]
 
-def save_cinema(cinema_data, user_id):
+def save_cinema(cinema_data, user_id,review=None, rating=None, date_consumed=None):
     existing_cinema = Cinema.query.filter_by(title=cinema_data.get("title")).first()
     if not existing_cinema:
-        director = cinema_data.get("director", "Empty")
-        type = cinema_data.get("type", "Empty")
-        reviews=cinema_data.get("reviews", "No Description Available")
-        if not reviews:
-            reviews = "No Description Available"
         cinema = Cinema(
             title=cinema_data.get("title"),
             genre=cinema_data.get("genre"),
             year=cinema_data.get("year"),
             country=cinema_data.get("country"),
-            director=director,
-            type=type,
+            director=cinema_data.get("director", "Empty"),
+            type=cinema_data.get("type", "Empty"),
             language=cinema_data.get("language"),
-            rating=cinema_data.get("rating"),
-            reviews=reviews,
+            description=cinema_data.get("reviews", "No Description Available"),
             coverart=cinema_data.get("coverart")
         )
         db.session.add(cinema)
@@ -105,7 +99,23 @@ def save_cinema(cinema_data, user_id):
 
     user_media_entry = UserMedia.query.filter_by(user_id=user_id, media_type='cinema', cinema_id=cinema.cinema_id).first()
     if not user_media_entry:
-        user_media_entry = UserMedia(user_id=user_id, media_type='cinema', cinema_id=cinema.cinema_id)
+        user_media_entry = UserMedia(
+            user_id=user_id,
+            media_type='cinema',
+            cinema_id=cinema.cinema_id,
+            review=review,
+            rating=float(rating) if rating else None,
+            date_consumed=date_consumed,
+            done=True if date_consumed else False
+        )
         db.session.add(user_media_entry)
+    else:
+        if review:
+            user_media_entry.review = review
+        if rating:
+            user_media_entry.rating = float(rating)
+        if date_consumed:
+            user_media_entry.date_consumed = date_consumed
+        user_media_entry.done = True if date_consumed else False
     db.session.commit()
     return cinema

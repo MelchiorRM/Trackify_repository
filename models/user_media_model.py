@@ -10,10 +10,13 @@ class UserMedia(db.Model):
     media_type = db.Column(db.Enum('book', 'music', 'cinema', name='media_type'), nullable=False)
     done = db.Column(db.Boolean, default=False)
     planned = db.Column(db.Boolean, default=False)
+    date_consumed = db.Column(db.DateTime, default=None)
+    review = db.Column(db.Text, default=None)
+    rating = db.Column(db.DECIMAL(2, 1), default=None)
 
     __table_args__ = (db.UniqueConstraint('user_id', 'book_id', 'music_id', 'cinema_id', name='unique_media'),)
 
-    def __init__(self, user_id, media_type, cinema_id=None, book_id=None, music_id=None, done=False, planned=False):
+    def __init__(self, user_id, media_type, cinema_id=None, book_id=None, music_id=None, done=False, planned=False, date_consumed=None, review=None, rating=None):
         self.user_id = user_id
         self.media_type = media_type
         self.cinema_id = cinema_id
@@ -21,3 +24,6 @@ class UserMedia(db.Model):
         self.music_id = music_id
         self.done = done
         self.planned = planned
+        self.date_consumed = date_consumed
+        self.review = review
+        self.rating = rating

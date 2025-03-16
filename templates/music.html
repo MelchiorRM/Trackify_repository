@@ -31,9 +31,9 @@
     {% endfor %}
 </ul>
 {% if has_prev %}
-<a href="{{ url_for('media_routes.music', page=prev_page, search_query=search_query) }}">Previous</a>
+<a href="{{ url_for('media_routes.music', page=prev_page, search_query=search_query), page=page-1 }}">Previous</a>
 {% endif %}
 {% if has_next %}
-<a href="{{ url_for('media_routes.music', page=next_page, search_query=search_query) }}">Next</a>
+<a href="{{ url_for('media_routes.music', page=next_page, search_query=search_query), page=page+1 }}">Next</a>
 {% endif %}
 {% endblock %}

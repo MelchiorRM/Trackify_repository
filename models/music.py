@@ -59,23 +59,18 @@ def search_music_spotify(query, page=1):
     total_results = data.get('tracks', {}).get('total', 0)
     return music, total_results, page
 
-def save_music(music_data, user_id):
+def save_music(music_data, user_id,review=None, rating=None, date_consumed=None):
     existing_music = Music.query.filter_by(title=music_data.get('title')).first()
     if not existing_music:
-        genre = music_data.get("genre", "Empty")
-        language = music_data.get("language", "Empty")
-        country = music_data.get("country", "Empty")
-        
         music = Music(
             title=music_data.get("title"),
             artist=music_data.get("artist"),
-            genre=genre,
+            genre=music_data.get("genre", "Empty"),
             year=music_data.get("year"),
-            language=language,
+            language=music_data.get("language", "Empty"),
             label=music_data.get("label"),
-            country=country,
-            rating=music_data.get("rating"),
-            reviews=music_data.get("reviews"),
+            country=music_data.get("country", "Empty"),
+            description=music_data.get("reviews"),
             coverart=music_data.get("coverart")
         )
         db.session.add(music)
@@ -85,7 +80,23 @@ def save_music(music_data, user_id):
     
     user_media_entry = UserMedia.query.filter_by(user_id=user_id, media_type='music', music_id=music.music_id).first()
     if not user_media_entry:
-        user_media = UserMedia(user_id=user_id, media_type='music', music_id=music.music_id)
-    db.session.add(user_media)
+        user_media_entry = UserMedia(
+            user_id=user_id,
+            media_type='music',
+            music_id=music.music_id,
+            review=review,
+            rating=rating,
+            date_consumed=date_consumed,
+            done=True if date_consumed else False
+            )
+        db.session.add(user_media_entry)
+    else:
+        if review:
+            user_media_entry.review = review
+        if rating:
+            user_media_entry.rating = float(rating)
+            if date_consumed:
+                user_media_entry.date_consumed = date_consumed
+                user_media_entry.done = True
     db.session.commit()
     return music

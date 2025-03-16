@@ -10,11 +10,10 @@ class Book(db.Model):
     language = db.Column(db.String(100))
     publisher = db.Column(db.String(100))
     country = db.Column(db.String(100))
-    rating = db.Column(db.DECIMAL(3, 1))
-    reviews = db.Column(db.Text)
+    description = db.Column(db.Text)
     coverart = db.Column(db.String(255))
 
-    def __init__(self, title, author, genre, year, language, publisher, country,rating, reviews, coverart):
+    def __init__(self, title, author, genre, year, language, publisher, country,description, coverart):
         self.title = title
         self.author = author
         self.genre = genre
@@ -22,6 +21,5 @@ class Book(db.Model):
         self.language = language
         self.publisher = publisher
         self.country = country
-        self.rating = rating
-        self.reviews = reviews
+        self.description = description
         self.coverart = coverart
