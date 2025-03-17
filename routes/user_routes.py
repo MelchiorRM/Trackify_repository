@@ -23,7 +23,7 @@ def register():
             profile_picture_path = os.path.join('static/profile_pictures', profile_picture.filename)
             profile_picture.save(profile_picture_path)
         else:
-            profile_picture_path = None
+            profile_picture_path = 'defaults/user.png'
         if User.query.filter_by(username=username).first():
             flash("Username already exists!")
             return redirect(url_for("user_routes.register"))
@@ -116,11 +116,17 @@ def profile():
 @user_routes.route("/search_users", methods=["GET", "POST"])
 @login_required
 def search_users():
-    search_query = request.form.get("search_query") if request.method == "POST" else request.args.get("search_query")
+    search_query = request.form.get("query") if request.method == "POST" else request.args.get("query")
+    
     if not search_query:
         flash("Please enter a search query.", "danger")
         return redirect(url_for("user_routes.dashboard"))
     users = User.query.filter(User.username.ilike(f"%{search_query}%")).all()
+    
+    print("users found", users)
+    for user in users:
+        print(users)
+        
     results = []
     for user in users:
         if user.user_id == current_user.user_id:
