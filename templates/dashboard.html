@@ -12,29 +12,6 @@
 <div class="card-deck">
     <div class="card">
         <div class="card-body">
-            <h5 class="card-title">Cinema</h5>
-            <p class="card-text">Manage your movie list.</p>
-            <a href=" url_for('media_routes.add_media', media_type='cinema') " class="btn btn-primary">Cinema Management</a>
-        </div>
-    </div>
-    <div class="card">
-        <div class="card-body">
-            <h5 class="card-title">Music</h5>
-            <p class="card-text">Manage your music list.</p>
-            <a href="url_for('media_routes.add_media', media_type='music') " class="btn btn-primary">Music Management</a>
-        </div>
-    </div>
-    <div class="card">
-        <div class="card-body">
-            <h5 class="card-title">Books</h5>
-            <p class="card-text">Manage your book list.</p>
-
-            <a href="url_for('media_routes.add_media', media_type='book')" class="btn btn-primary">Book Management</a>
-            <a href="{{ url_for('media_routes.books') }}">Browse/Search Books</a>
-        </div>
-    </div>
-    <div class="card">
-        <div class="card-body">
             <h5 class="card-title">Profile</h5>
             <p class="card-text">Manage your profile information.</p>
             <a href="{{ url_for('user_routes.profile') }}" class="btn btn-primary">Edit Profile</a>
