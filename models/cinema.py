@@ -79,6 +79,7 @@ def get_genre_names(genre_ids, api_key):
     return [genre_dict.get(genre_id, "Unknown") for genre_id in genre_ids]
 
 def save_cinema(cinema_data, user_id,review=None, rating=None, date_consumed=None):
+    from utils.completion import enrich_single_media_item
     existing_cinema = Cinema.query.filter_by(title=cinema_data.get("title")).first()
     if not existing_cinema:
         cinema = Cinema(
@@ -94,6 +95,8 @@ def save_cinema(cinema_data, user_id,review=None, rating=None, date_consumed=Non
         )
         db.session.add(cinema)
         db.session.flush()
+        # Enrich the cinema data before commit
+        enrich_single_media_item(cinema, "movie")
     else:
         cinema = existing_cinema
 
@@ -104,18 +107,18 @@ def save_cinema(cinema_data, user_id,review=None, rating=None, date_consumed=Non
             media_type='cinema',
             cinema_id=cinema.cinema_id,
             review=review,
-            rating=float(rating) if rating else None,
-            date_consumed=date_consumed,
-            done=True if date_consumed else False
+            rating=float(rating) if rating and rating != 'None' else None,
+            date_consumed=date_consumed if date_consumed and date_consumed != '' else None,
+            done=True if date_consumed and date_consumed != '' else False
         )
         db.session.add(user_media_entry)
     else:
         if review:
             user_media_entry.review = review
-        if rating:
+        if rating and rating != 'None':
             user_media_entry.rating = float(rating)
-        if date_consumed:
+        if date_consumed and date_consumed != '':
             user_media_entry.date_consumed = date_consumed
-        user_media_entry.done = True if date_consumed else False
+        user_media_entry.done = True if date_consumed and date_consumed != '' else False
     db.session.commit()
     return cinema

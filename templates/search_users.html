@@ -1,30 +1,43 @@
 {% extends "base.html" %}
 {% block title %}Search Users{% endblock %}
 {% block content %}
-    <h1>Search Users</h1>
-    <form action="{{ url_for('user_routes.search_users') }}" method="POST">
-        <input type="text" name="search_query" placeholder="Search for users" value="{{ search_query or '' }}" required>
-        <button type="submit">Search</button>
+<div class="form-container">
+    <h1 class="text-center mb-4">Search Users</h1>
+    <form action="{{ url_for('user_routes.search_users') }}" method="POST" class="mb-4">
+        <div class="input-group">
+            <input type="text" name="search_query" placeholder="Search for users" value="{{ search_query or '' }}" required class="form-control">
+            <div class="input-group-append">
+                <button type="submit" class="btn btn-primary">Search</button>
+            </div>
+        </div>
     </form>
 
     {% if results %}
-        <h2>Results</h2>
-        <ul>
-            {% for result in results %}
-            <li>
-                <strong>{{ result.user.username }}</strong>
-                {% if result.is_followed %}
-                    <form action="{{ url_for('user_routes.unfollow', user_id=result.user.user_id) }}" method="POST" style="display:inline;">
-                        <button type="submit">Unfollow</button>
+    <h2 class="mb-4 text-center">Results</h2>
+    <div class="row">
+        {% for result in results %}
+        <div class="col-md-6 col-lg-4 mb-3">
+            <div class="card">
+                <div class="card-body text-center">
+                    <h5 class="card-title">{{ result.user.username }}</h5>
+                    {% if result.is_followed %}
+                    <form action="{{ url_for('user_routes.unfollow', user_id=result.user.user_id) }}" method="POST" class="d-inline">
+                        <button type="submit" class="btn btn-danger btn-sm">Unfollow</button>
                     </form>
-                {% else %}
-                    <form action="{{ url_for('user_routes.follow', user_id=result.user.user_id) }}" method="POST" style="display:inline;">
-                        <button type="submit">Follow</button>
+                    {% else %}
+                    <form action="{{ url_for('user_routes.follow', user_id=result.user.user_id) }}" method="POST" class="d-inline">
+                        <button type="submit" class="btn btn-success btn-sm">Follow</button>
                     </form>
-                {% endif %}
-            </li>
-            {% endfor %}
-        </ul>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
     {% endif %}
-    <a href="{{ url_for('user_routes.dashboard') }}">Back to Dashboard</a>
+
+    <div class="text-center mt-4">
+        <a href="{{ url_for('user_routes.dashboard') }}" class="btn btn-secondary">Back to Dashboard</a>
+    </div>
+</div>
 {% endblock %}

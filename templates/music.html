@@ -1,39 +1,63 @@
 {% extends "base.html" %}
 
 {% block content %}
-<h1>Music</h1>
-<form method="POST" action="{{ url_for('media_routes.music') }}">
-    <input type="text" name="search_query" placeholder="Search for music" value="{{ search_query }}">
-    <button type="submit">Search</button>
-</form>
-<h2>Search Results</h2>
-<ul>
-    {% for music in music %}
-    <li>{% if music.coverart %}
-        <img src="{{ music.coverart }}" alt="{{ music.title }} cover" style="width: 100px;">
+<div class="form-container">
+    <h1 class="text-center mb-4">Music</h1>
+    <form method="POST" action="{{ url_for('media_routes.music') }}" class="mb-4">
+        <div class="input-group">
+            <input type="text" name="search_query" placeholder="Search for music" value="{{ search_query }}" class="form-control">
+            <div class="input-group-append">
+                <button type="submit" class="btn btn-primary">Search</button>
+            </div>
+        </div>
+    </form>
+
+    <h2 class="mb-4 text-center">Search Results</h2>
+    {% if music %}
+    <div class="row">
+        {% for track in music %}
+        <div class="col-md-6 col-lg-4 mb-4">
+            <div class="card h-100 shadow-sm">
+                {% if track.coverart %}
+                <img src="{{ track.coverart }}" class="card-img-top" alt="{{ track.title }}">
+                {% endif %}
+                <div class="card-body">
+                    <h5 class="card-title">{{ track.title }}</h5>
+                    <p class="card-text">Artist: {{ track.artist }}</p>
+                    <p>Rating: {{ track.rating }}</p>
+                </div>
+                <div class="card-footer">
+                    <form method="POST" action="{{ url_for('media_routes.music') }}">
+                        <input type="hidden" name="title" value="{{ track.title }}">
+                        <input type="hidden" name="artist" value="{{ track.artist }}">
+                        <input type="hidden" name="genre" value="{{ track.genre }}">
+                        <input type="hidden" name="year" value="{{ track.year }}">
+                        <input type="hidden" name="language" value="{{ track.language }}">
+                        <input type="hidden" name="country" value="{{ track.country }}">
+                        <input type="hidden" name="rating" value="{{ track.rating }}">
+                        <input type="hidden" name="reviews" value="{{ track.reviews }}">
+                        <input type="hidden" name="coverart" value="{{ track.coverart }}">
+
+                        <button type="submit" class="btn btn-success btn-block">Add to Library</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <p class="text-center">No music tracks found.</p>
+    {% endif %}
+
+    <div class="pagination d-flex justify-content-between mt-4">
+        {% if has_prev %}
+        <a href="{{ url_for('media_routes.music', page=page-1, search_query=search_query) }}" class="btn btn-outline-secondary">&laquo; Previous</a>
+        {% else %}
+        <span></span>
         {% endif %}
-        <h3>{{ music.title }}</h3>
-        <p>Artist: {{ music.artist }}</p>
-        <p>Rating: {{ music.rating }}</p>
-        <form method="POST" action="{{ url_for('media_routes.music') }}">
-            <input type="hidden" name="title" value="{{ music.title }}">
-            <input type="hidden" name="artist" value="{{ music.artist }}">
-            <input type="hidden" name="genre" value="{{ music.genre }}">
-            <input type="hidden" name="year" value="{{ music.year }}">
-            <input type="hidden" name="language" value="{{ music.language }}">
-            <input type="hidden" name="country" value="{{ music.country }}">
-            <input type="hidden" name="rating" value="{{ music.rating }}">
-            <input type="hidden" name="reviews" value="{{ music.reviews }}">
-            <input type="hidden" name="coverart" value="{{ music.coverart }}">
-            <button type="submit">Add to Library</button>
-        </form>
-    </li>
-    {% endfor %}
-</ul>
-{% if has_prev %}
-<a href="{{ url_for('media_routes.music', page=prev_page, search_query=search_query), page=page-1 }}">Previous</a>
-{% endif %}
-{% if has_next %}
-<a href="{{ url_for('media_routes.music', page=next_page, search_query=search_query), page=page+1 }}">Next</a>
-{% endif %}
+        {% if has_next %}
+        <a href="{{ url_for('media_routes.music', page=page+1, search_query=search_query) }}" class="btn btn-outline-primary">Next &raquo;</a>
+        {% endif %}
+    </div>
+</div>
 {% endblock %}

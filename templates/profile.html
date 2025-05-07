@@ -1,27 +1,26 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Edit Profile</title>
-</head>
-<body>
-    <h1>Edit Profile</h1>
+{% extends "base.html" %}
+
+{% block content %}
+<div class="form-container profile-form">
+    <h1 class="text-center mb-4">Edit Profile</h1>
     <form method="POST" enctype="multipart/form-data">
         <label for="username">Username:</label>
         <input type="text" id="username" name="username" value="{{ current_user.username }}" required><br>
-        
+
         <label for="email">Email:</label>
         <input type="email" id="email" name="email" value="{{ current_user.email }}" required><br>
 
         <label for="password">Password:</label>
         <input type="password" id="password" name="password" required><br>
 
-        <label for ="profile_picture">Profile Picture:</label>
-        <input type="file" id="profile_picture" name="profile_picture" value="{{ current_user.profile_picture }}"><br>
+        <label for="profile_picture">Profile Picture:</label>
+        <input type="file" id="profile_picture" name="profile_picture"><br>
 
-        <button type="submit">Save Changes</button>
+        <button type="submit" class="btn btn-primary">Save Changes</button>
+        <button type="submit" name="delete_picture" class="btn btn-danger ml-2">Delete Profile Picture</button>
     </form>
-    <a href="{{ url_for('user_routes.dashboard') }}">Back to Dashboard</a>
-</body>
-</html>
+    <div class="text-center mt-3">
+        <a href="{{ url_for('user_routes.dashboard') }}" class="btn btn-secondary">Back to Dashboard</a>
+    </div>
+</div>
+{% endblock %}

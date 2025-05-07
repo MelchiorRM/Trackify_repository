@@ -1,12 +1,8 @@
-<!DOCTYPE html>
-<html>
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Trackify - 500</title>
-    </head>
-    <body>
-        <h1>500- Internal Server Error</h1>
-        <p>There was an internal server error. Please try again later.</p>
-        <a href="{{ url_for('user_routes.dashboard') }}">Go back to the dashboard</a>
-</html>
+{% extends "base.html" %}
+{% block content %}
+<div class="error-page text-center py-5">
+    <h1>500 - Internal Server Error</h1>
+    <p>There was an internal server error. Please try again later.</p>
+    <a href="{{ url_for('user_routes.dashboard') }}" class="btn btn-primary mt-3">Go back to Dashboard</a>
+</div>
+{% endblock %}

@@ -1,48 +1,62 @@
-<!-- templates/books.html -->
 {% extends "base.html" %}
 
 {% block content %}
-<h1>Books</h1>
+<div class="form-container">
+    <h1 class="text-center mb-4">Books</h1>
+    <form method="POST" action="{{ url_for('media_routes.books') }}" class="mb-4">
+        <div class="input-group">
+            <input type="text" name="search_query" placeholder="Search for books" value="{{ search_query }}" class="form-control">
+            <div class="input-group-append">
+                <button type="submit" class="btn btn-primary">Search</button>
+            </div>
+        </div>
+    </form>
 
-<form method="POST" action="{{ url_for('media_routes.books') }}">
-    <input type="text" name="search_query" placeholder="Search for books" value="{{ search_query }}">
-    <button type="submit">Search</button>
-</form>
+    <h2 class="mb-4 text-center">Search Results</h2>
+    {% if books %}
+    <div class="row">
+        {% for book in books %}
+        <div class="col-md-6 col-lg-4 mb-4">
+            <div class="card h-100 shadow-sm">
+                {% if book.coverart %}
+                <img src="{{ book.coverart }}" class="card-img-top" alt="{{ book.title }}">
+                {% endif %}
+                <div class="card-body">
+                    <h5 class="card-title">{{ book.title }}</h5>
+                    <p class="card-text">Author: {{ book.author }}</p>
+                </div>
+                <div class="card-footer">
+                    <form method="POST" action="{{ url_for('media_routes.books') }}">
+                        <input type="hidden" name="title" value="{{ book.title }}">
+                        <input type="hidden" name="author" value="{{ book.author }}">
+                        <input type="hidden" name="genre" value="{{ book.genre }}">
+                        <input type="hidden" name="year" value="{{ book.year }}">
+                        <input type="hidden" name="language" value="{{ book.language }}">
+                        <input type="hidden" name="publisher" value="{{ book.publisher }}">
+                        <input type="hidden" name="country" value="{{ book.country }}">
+                        <input type="hidden" name="rating" value="{{ book.rating }}">
+                        <input type="hidden" name="reviews" value="{{ book.reviews }}">
+                        <input type="hidden" name="coverart" value="{{ book.coverart }}">
+                        <button type="submit" class="btn btn-success btn-block">Add to Library</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <p class="text-center">No books found.</p>
+    {% endif %}
 
-<h2>Search Results</h2>
-<ul>
-    {% for book in books %}
-    <li>
-        {% if book.coverart %}
-        <img src="{{ book.coverart }}" alt="{{ book.title }} cover" style="width: 100px;">
+    <div class="pagination d-flex justify-content-between mt-4">
+        {% if has_prev %}
+        <a href="{{url_for('media_routes.books', search_query=search_query, page=page-1)}}" class="btn btn-outline-secondary">&laquo; Previous</a>
+        {% else %}
+        <span></span>
         {% endif %}
-        <h3>{{ book.title }}</h3>
-        <p>Author: {{ book.author }}</p>
-        <!-- Add more details as needed -->
-
-        <!-- Add to Library Form (for each book in search results) -->
-        <form method="POST" action="{{ url_for('media_routes.books') }}">
-            <input type="hidden" name="title" value="{{ book.title }}">
-            <input type="hidden" name="author" value="{{ book.author }}">
-            <input type="hidden" name="genre" value="{{ book.genre }}">
-            <input type="hidden" name="year" value="{{ book.year }}">
-            <input type="hidden" name="language" value="{{ book.language }}">
-            <input type="hidden" name="publisher" value="{{ book.publisher }}">
-            <input type="hidden" name="country" value="{{ book.country }}">
-            <input type="hidden" name="rating" value="{{ book.rating }}">
-            <input type="hidden" name="reviews" value="{{ book.reviews }}">
-            <input type="hidden" name="coverart" value="{{ book.coverart }}">
-            <!-- Add other hidden fields for the remaining book data -->
-            <button type="submit">Add to Library</button>
-        </form>
-    </li>
-    {% endfor %}
-</ul>
-<!-- Pagination Links -->
-{% if has_prev %}
-<a href="{{url_for('media_routes.books', search_query=search_query, page=page-1)}}">Previous</a>
-{% endif %}
-{% if has_next %}
-<a href="{{url_for('media_routes.books', search_query=search_query, page=page+1)}}">Next</a>
-{% endif %}
+        {% if has_next %}
+        <a href="{{url_for('media_routes.books', search_query=search_query, page=page+1)}}" class="btn btn-outline-primary">Next &raquo;</a>
+        {% endif %}
+    </div>
+</div>
 {% endblock %}

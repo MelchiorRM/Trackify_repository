@@ -1,0 +1,184 @@
+{% extends "base.html" %}
+
+{% block title %}Recommendations{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1 class="text-center mb-4">Recommendations</h1>
+
+    {% if focus and value_filter %}
+    <p class="text-muted text-center mb-4">
+        Showing recommendations filtered by <strong>{{ focus }}</strong>: <strong>{{ value_filter }}</strong>
+    </p>
+    {% endif %}
+
+    <!-- Books -->
+    <h2 class="mt-5 mb-3">📚 Books</h2>
+    {% if books %}
+    <div class="row">
+        {% for book in books %}
+        <div class="col-md-6 col-lg-4 mb-3">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title">{{ book.title }}</h5>
+                    <p class="card-text">Author: {{ book.author }}<br>Genre: {{ book.genre }}</p>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <p>No book recommendations available.</p>
+    {% endif %}
+
+    <!-- Movies -->
+    <h2 class="mt-5 mb-3">🎬 Movies</h2>
+    {% if movies %}
+    <div class="row">
+        {% for movie in movies %}
+        <div class="col-md-6 col-lg-4 mb-3">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title">{{ movie.title }}</h5>
+                    <p class="card-text">Genre: {{ movie.genre }}<br>Director: {{ movie.director }}</p>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <p>No movie recommendations available.</p>
+    {% endif %}
+
+    <!-- Music -->
+    <h2 class="mt-5 mb-3">🎵 Music</h2>
+    {% if music %}
+    <div class="row">
+        {% for track in music %}
+        <div class="col-md-6 col-lg-4 mb-3">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title">{{ track.title }}</h5>
+                    <p class="card-text">Artist: {{ track.artist }}<br>Genre: {{ track.genre }}</p>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <p>No music recommendations available.</p>
+    {% endif %}
+
+    <!-- Collaborative Filtering -->
+    <h2 class="mt-5 mb-3">👥 Collaborative Recommendations</h2>
+    <h3>📚 Books</h3>
+    {% if commun_books %}
+    <div class="row">
+        {% for book in commun_books %}
+        <div class="col-md-6 col-lg-4 mb-3">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title">{{ book.title }}</h5>
+                    <p class="card-text">Author: {{ book.author }}</p>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <p>No collaborative book recommendations available.</p>
+    {% endif %}
+
+    <h3>🎬 Movies</h3>
+    {% if commun_movies %}
+    <div class="row">
+        {% for movie in commun_movies %}
+        <div class="col-md-6 col-lg-4 mb-3">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title">{{ movie.title }}</h5>
+                    <p class="card-text">Genre: {{ movie.genre }}</p>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <p>No collaborative movie recommendations available.</p>
+    {% endif %}
+
+    <h3>🎵 Music</h3>
+    {% if commun_music %}
+    <div class="row">
+        {% for track in commun_music %}
+        <div class="col-md-6 col-lg-4 mb-3">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title">{{ track.title }}</h5>
+                    <p class="card-text">Artist: {{ track.artist }}</p>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <p>No collaborative music recommendations available.</p>
+    {% endif %}
+
+    <!-- Gemini-Based -->
+    <h2 class="mt-5 mb-3">🧠 Gemini-Powered Recommendations</h2>
+    <h3>📚 Books</h3>
+    {% if gemini_books %}
+    <div class="row">
+        {% for book in gemini_books %}
+        <div class="col-md-6 col-lg-4 mb-3">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title">{{ book.title }}</h5>
+                    <p class="card-text">Author: {{ book.author }}</p>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <p>No Gemini-powered book recommendations available.</p>
+    {% endif %}
+
+    <h3>🎬 Movies</h3>
+    {% if gemini_movies %}
+    <div class="row">
+        {% for movie in gemini_movies %}
+        <div class="col-md-6 col-lg-4 mb-3">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title">{{ movie.title }}</h5>
+                    <p class="card-text">Genre: {{ movie.genre }}</p>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <p>No Gemini-powered movie recommendations available.</p>
+    {% endif %}
+
+    <h3>🎵 Music</h3>
+    {% if gemini_music %}
+    <div class="row">
+        {% for track in gemini_music %}
+        <div class="col-md-6 col-lg-4 mb-3">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title">{{ track.title }}</h5>
+                    <p class="card-text">Artist: {{ track.artist }}</p>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <p>No Gemini-powered music recommendations available.</p>
+    {% endif %}
+</div>
+{% endblock %}

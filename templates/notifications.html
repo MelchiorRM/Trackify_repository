@@ -1,18 +1,24 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Notifications</title>
-</head>
-<body>
-    <h1>Notifications</h1><ul>
-    {% for notification in notifications %}
-    <li>
-        {{ notification.message }} - {{ notification.created_at.strftime('%Y-%m-%d %H:%M:%S') }}
-        {% if not notification.read %}
-            <strong>(Unread)</strong>
-        {% endif %}
-    </li>
-    {% endfor %}</ul>
-    <a href="{{ url_for('user_routes.dashboard') }}">Back to Dashboard</a>
-</body>
-</html>
+{% extends "base.html" %}
+
+{% block content %}
+<div class="content-container notifications">
+    <h1 class="text-center mb-4">Notifications</h1>
+    {% if notifications %}
+    <ul>
+        {% for notification in notifications %}
+        <li class="{% if not notification.read %}font-weight-bold{% endif %}">
+            {{ notification.message }} - {{ notification.created_at.strftime('%Y-%m-%d %H:%M:%S') }}
+            {% if not notification.read %}
+                <strong>(Unread)</strong>
+            {% endif %}
+        </li>
+        {% endfor %}
+    </ul>
+    {% else %}
+    <p class="text-center">No notifications found.</p>
+    {% endif %}
+    <div class="text-center mt-3">
+        <a href="{{ url_for('user_routes.dashboard') }}" class="btn btn-secondary">Back to Dashboard</a>
+    </div>
+</div>
+{% endblock %}

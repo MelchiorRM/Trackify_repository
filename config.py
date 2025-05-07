@@ -13,4 +13,5 @@ class Config:
     TMDB_API_KEY = os.environ.get('TMDB_API_KEY') or '22f25a5ae58d199051d00c89d1eb7550'
     SPOTIFY_CLIENT_ID = os.environ.get('SPOTIFY_CLIENT_ID') or '15a15c13a1d649f2a5989067b2cb141e'
     SPOTIFY_CLIENT_SECRET = os.environ.get('SPOTIFY_CLIENT_SECRET') or '05cd351353f640ba9d6c7a0e232768a0'
+    GEMINI_API_KEY = os.environ.get('GEMINI_API_KEY') or 'AIzaSyAPmeqpfb6lcbSdO5fOaawRta7-u6GX0y4'
     DEBUG = True

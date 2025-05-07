@@ -68,6 +68,7 @@ def search_open_library(query, page=1):
     return books, data.get("numFound", 0), page
 
 def save_books(book_data, user_id, review=None, rating=None, date_consumed=None):
+    from utils.completion import enrich_single_media_item
     existing_book = Book.query.filter_by(title=book_data["title"], author=book_data["author"]).first()
     if not existing_book:
         book = Book(
@@ -83,6 +84,8 @@ def save_books(book_data, user_id, review=None, rating=None, date_consumed=None)
         )
         db.session.add(book)
         db.session.flush() # flush to get the book_id
+        # Enrich the book data before commit
+        enrich_single_media_item(book, "book")
     else:
         book = existing_book
 
@@ -93,16 +96,16 @@ def save_books(book_data, user_id, review=None, rating=None, date_consumed=None)
             book_id=book.book_id,
             media_type='book',
             review=review,
-            rating=float(rating) if rating else None,
-            date_consumed=date_consumed,
-            done=True if date_consumed else False
+            rating=float(rating) if rating and rating != 'None' else None,
+            date_consumed=date_consumed if date_consumed and date_consumed != '' else None,
+            done=True if date_consumed and date_consumed != '' else False
             )
     else:
         if review:
             user_media_entry.review = review
-        if rating:
+        if rating and rating != 'None':
             user_media_entry.rating = float(rating)
-        if date_consumed:
+        if date_consumed and date_consumed != '':
             user_media_entry.date_consumed = date_consumed
             user_media_entry.done = True
         db.session.add(user_media_entry)
