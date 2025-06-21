@@ -1,4 +1,4 @@
-def paginate(query, page, per_page=10):
+def paginate(query, page, per_page=12):
     """Paginate a SQLAlchemy query."""
     total_items = query.count()
     items = query.offset((page - 1) * per_page).limit(per_page).all()

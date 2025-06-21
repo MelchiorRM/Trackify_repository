@@ -1,24 +1,28 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="content-container notifications">
-    <h1 class="text-center mb-4">Notifications</h1>
-    {% if notifications %}
-    <ul>
-        {% for notification in notifications %}
-        <li class="{% if not notification.read %}font-weight-bold{% endif %}">
-            {{ notification.message }} - {{ notification.created_at.strftime('%Y-%m-%d %H:%M:%S') }}
-            {% if not notification.read %}
-                <strong>(Unread)</strong>
-            {% endif %}
-        </li>
-        {% endfor %}
-    </ul>
-    {% else %}
-    <p class="text-center">No notifications found.</p>
-    {% endif %}
-    <div class="text-center mt-3">
-        <a href="{{ url_for('user_routes.dashboard') }}" class="btn btn-secondary">Back to Dashboard</a>
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0">Notifications</h4>
+                    <a href="{{ url_for('main_routes.home') }}" class="btn btn-outline-primary">Back to Home</a>
+                </div>
+                <div class="card-body">
+                    {% if notifications %}
+                        {% for notification in notifications %}
+                            <div class="notification-item mb-3 pb-3 border-bottom">
+                                <p class="mb-1">{{ notification.message }}</p>
+                                <small class="text-muted">{{ notification.created_at.strftime('%B %d, %Y %H:%M') }}</small>
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <p class="text-muted text-center">No notifications yet.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 {% endblock %}

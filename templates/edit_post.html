@@ -1,0 +1,144 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h4>Edit Post</h4>
+                </div>
+                <div class="card-body">
+                    <form method="POST" id="editPostForm">
+                        <!-- Post Content -->
+                        <div class="mb-3">
+                            <label for="content" class="form-label">What's on your mind?</label>
+                            <textarea class="form-control" id="content" name="content" rows="4" 
+                                      placeholder="Share your thoughts, review, or just talk about what you're consuming..." required>{{ post.content }}</textarea>
+                            <div class="form-text">Share your thoughts about media, life, or anything else!</div>
+                        </div>
+
+                        <!-- Rating Section -->
+                        <div class="mb-3">
+                            <label class="form-label">Rating (optional)</label>
+                            <div class="rating-input">
+                                {% for i in range(1, 6) %}
+                                <input type="radio" name="rating" value="{{ i }}" id="star{{ i }}" class="rating-radio" 
+                                       {% if post.rating == i %}checked{% endif %}>
+                                <label for="star{{ i }}" class="rating-star">★</label>
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                        <!-- Review Section -->
+                        <div class="mb-3">
+                            <label for="review" class="form-label">Review (optional)</label>
+                            <textarea class="form-control" id="review" name="review" rows="3" 
+                                      placeholder="Write a detailed review...">{{ post.review or '' }}</textarea>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="d-flex justify-content-between">
+                            <a href="{{ url_for('post_routes.view_post', post_id=post.post_id) }}" class="btn btn-secondary">Cancel</a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i> Update Post
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.rating-input {
+    display: flex;
+    flex-direction: row-reverse;
+    gap: 5px;
+}
+
+.rating-radio {
+    display: none;
+}
+
+.rating-star {
+    font-size: 2rem;
+    color: #ddd;
+    cursor: pointer;
+    transition: color 0.2s;
+}
+
+.rating-star:hover,
+.rating-star:hover ~ .rating-star,
+.rating-radio:checked ~ .rating-star {
+    color: #ffc107;
+}
+
+.rating-radio:checked ~ .rating-star {
+    color: #ffc107;
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('editPostForm');
+    const contentTextarea = document.getElementById('content');
+    const reviewTextarea = document.getElementById('review');
+    
+    // Auto-resize textareas
+    function autoResize(textarea) {
+        textarea.style.height = 'auto';
+        textarea.style.height = textarea.scrollHeight + 'px';
+    }
+    
+    contentTextarea.addEventListener('input', () => autoResize(contentTextarea));
+    reviewTextarea.addEventListener('input', () => autoResize(reviewTextarea));
+    
+    // Initialize sizes
+    autoResize(contentTextarea);
+    autoResize(reviewTextarea);
+    
+    // Form validation
+    form.addEventListener('submit', function(e) {
+        const content = contentTextarea.value.trim();
+        if (!content) {
+            e.preventDefault();
+            alert('Please enter some content for your post.');
+            contentTextarea.focus();
+        }
+    });
+    
+    // Character counter
+    function updateCharCount(textarea, maxLength = 1000) {
+        const count = textarea.value.length;
+        const remaining = maxLength - count;
+        
+        // Create or update counter element
+        let counter = textarea.parentNode.querySelector('.char-counter');
+        if (!counter) {
+            counter = document.createElement('small');
+            counter.className = 'char-counter text-muted';
+            textarea.parentNode.appendChild(counter);
+        }
+        
+        counter.textContent = `${count}/${maxLength} characters`;
+        
+        if (remaining < 0) {
+            counter.className = 'char-counter text-danger';
+        } else if (remaining < 100) {
+            counter.className = 'char-counter text-warning';
+        } else {
+            counter.className = 'char-counter text-muted';
+        }
+    }
+    
+    contentTextarea.addEventListener('input', () => updateCharCount(contentTextarea));
+    reviewTextarea.addEventListener('input', () => updateCharCount(reviewTextarea, 500));
+    
+    // Initialize counters
+    updateCharCount(contentTextarea);
+    updateCharCount(reviewTextarea, 500);
+});
+</script>
+{% endblock %} 

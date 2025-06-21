@@ -16,8 +16,6 @@ def search_books(query, page=1):
         "language": book.language,
         "publisher": book.publisher,
         "country": book.country,
-        "rating": book.rating,
-        "reviews": book.reviews,
         "coverart": book.coverart
         } for book in local_books]
     
@@ -67,7 +65,7 @@ def search_open_library(query, page=1):
         books.append(book_data)
     return books, data.get("numFound", 0), page
 
-def save_books(book_data, user_id, review=None, rating=None, date_consumed=None):
+def save_books(book_data, user_id, review=None, rating=None, date_consumed=None, tags=None):
     from utils.completion import enrich_single_media_item
     existing_book = Book.query.filter_by(title=book_data["title"], author=book_data["author"]).first()
     if not existing_book:
@@ -84,10 +82,11 @@ def save_books(book_data, user_id, review=None, rating=None, date_consumed=None)
         )
         db.session.add(book)
         db.session.flush() # flush to get the book_id
-        # Enrich the book data before commit
-        enrich_single_media_item(book, "book")
+        # Enrich the book data before commit and get tags
+        generated_tags = enrich_single_media_item(book, "book")
     else:
         book = existing_book
+        generated_tags = []
 
     user_media_entry = UserMedia.query.filter_by(user_id=user_id, media_type='book',book_id=book.book_id).first()
     if not user_media_entry:
@@ -98,7 +97,8 @@ def save_books(book_data, user_id, review=None, rating=None, date_consumed=None)
             review=review,
             rating=float(rating) if rating and rating != 'None' else None,
             date_consumed=date_consumed if date_consumed and date_consumed != '' else None,
-            done=True if date_consumed and date_consumed != '' else False
+            done=True if date_consumed and date_consumed != '' else False,
+            tags=generated_tags if generated_tags else (tags if tags is not None else [])
             )
     else:
         if review:
@@ -108,6 +108,10 @@ def save_books(book_data, user_id, review=None, rating=None, date_consumed=None)
         if date_consumed and date_consumed != '':
             user_media_entry.date_consumed = date_consumed
             user_media_entry.done = True
+        if generated_tags:
+            user_media_entry.tags = generated_tags
+        elif tags is not None:
+            user_media_entry.tags = tags
         db.session.add(user_media_entry)
     db.session.commit()
     return book

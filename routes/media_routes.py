@@ -25,14 +25,11 @@ def search():
         return redirect(url_for('media_routes.cinema', search_query=search_query, page=1))
     else:
         flash("Invalid media type", "danger")
-        return redirect(url_for('user_routes.dashboard'))
+        return redirect(url_for('main_routes.home'))
 
 @media_routes.route("/books", methods=["GET", "POST"])
 @login_required
 def books():
-    books = []
-    search_query = request.args.get('search_query','')
-    page = int(request.args.get('page', 1))
     if request.method == "POST":
         search_query = request.form.get("search_query")
         if search_query:
@@ -52,9 +49,12 @@ def books():
             rating = request.form.get("rating")
             date_consumed = request.form.get("date_consumed")
             user_id = current_user.user_id
-            save_books(book_data, user_id, review, rating, date_consumed)
+            book = save_books(book_data, user_id, review, rating, date_consumed)
             flash("Book added to library!", "success")
-            return redirect(url_for("media_routes.books"))
+            return redirect(url_for("media_routes.media", media_id=book.book_id, media_type='book'))
+    
+    search_query = request.args.get('search_query','')
+    page = int(request.args.get('page', 1))
     if search_query:
         books, total_results, current_page = search_books(search_query, page)
         results_per_page = 20
@@ -74,13 +74,10 @@ def books():
 @media_routes.route("/music", methods=["GET", "POST"])
 @login_required
 def music():
-    music = []
-    search_query = request.args.get('search_query', '')
-    page = int(request.args.get('page', 1))
     if request.method == "POST":
         search_query = request.form.get("search_query")
         if search_query:
-            return redirect(url_for("media_routes.music", search_query=search_query, page=page))
+            return redirect(url_for("media_routes.music", search_query=search_query, page=1))
         else:
             music_data = {
                 "title": request.form.get("title"),
@@ -96,9 +93,12 @@ def music():
             rating = request.form.get("rating")
             date_consumed = request.form.get("date_consumed")
             user_id = current_user.user_id
-            save_music(music_data, user_id, review, rating, date_consumed)
+            music = save_music(music_data, user_id, review, rating, date_consumed)
             flash("Music added to library!", "success")
-            return redirect(url_for("media_routes.music"))
+            return redirect(url_for("media_routes.media", media_id=music.music_id, media_type='music'))
+    
+    search_query = request.args.get('search_query', '')
+    page = int(request.args.get('page', 1))
     if search_query:
         music, total_results, current_page = search_music(search_query, page)
         results_per_page = 20
@@ -115,16 +115,13 @@ def music():
         current_page = 1
     return render_template("music.html", search_query=search_query, music=paged_music, page=current_page, has_next=has_next, has_prev=has_prev)
 
-@media_routes.route("/cinema", methods = ["GET", "POST"])
+@media_routes.route("/cinema", methods=["GET", "POST"])
 @login_required
 def cinema():
-    cinema = []
-    search_query = request.args.get('search_query', '')
-    page = int(request.args.get('page', 1))
     if request.method == "POST":
         search_query = request.form.get("search_query")
         if search_query:
-            return redirect(url_for("media_routes.cinema", search_query=search_query, page=page))
+            return redirect(url_for("media_routes.cinema", search_query=search_query, page=1))
         else:
             cinema_data = {
                 "title": request.form.get("title"),
@@ -140,9 +137,12 @@ def cinema():
             rating = request.form.get("rating")
             date_consumed = request.form.get("date_consumed")
             user_id = current_user.user_id
-            save_cinema(cinema_data, user_id, review, rating, date_consumed)
+            cinema = save_cinema(cinema_data, user_id, review, rating, date_consumed)
             flash("Cinema added to library!", "success")
-            return redirect(url_for("media_routes.cinema"))
+            return redirect(url_for("media_routes.media", media_id=cinema.cinema_id, media_type='cinema'))
+    
+    search_query = request.args.get('search_query', '')
+    page = int(request.args.get('page', 1))
     if search_query:
         cinema, total_results, current_page = search_cinema(search_query, page)
         results_per_page = 20
@@ -159,24 +159,44 @@ def cinema():
         current_page = 1
     return render_template("cinema.html", cinema=paged_cinema, search_query=search_query, page=current_page, has_next=has_next, has_prev=has_prev)
 
-@media_routes.route("/library")
+@media_routes.route("/media/<media_type>/<int:media_id>")
 @login_required
-def library():
-    user_id = current_user.user_id
-    user_media_entries = UserMedia.query.filter_by(user_id=user_id).all()
-    books = []
-    music = []
-    cinema = []
-
-    for entry in user_media_entries:
-        if entry.media_type == "book":
-            book = Book.query.get(entry.book_id)
-            books.append(book)
-        elif entry.media_type == "music":
-            music.append(Music.query.get(entry.music_id))
-        elif entry.media_type == "cinema":
-            cinema.append(Cinema.query.get(entry.cinema_id))
-    return render_template("library.html", books=books, music=music, cinema=cinema)
+def media(media_type, media_id):
+    if media_type == 'book':
+        media = Book.query.get_or_404(media_id)
+    elif media_type == 'music':
+        media = Music.query.get_or_404(media_id)
+    elif media_type == 'cinema':
+        media = Cinema.query.get_or_404(media_id)
+    else:
+        flash("Invalid media type", "danger")
+        return redirect(url_for('main_routes.home'))
+    
+    # Get user media entry
+    user_media = UserMedia.query.filter_by(
+        user_id=current_user.user_id,
+        media_type=media_type,
+        **{f"{media_type}_id": media_id}
+    ).first()
+    
+    # Get network activity
+    planned_by = UserMedia.query.filter_by(
+        media_type=media_type,
+        planned=True,
+        **{f"{media_type}_id": media_id}
+    ).all()
+    
+    consumed_by = UserMedia.query.filter_by(
+        media_type=media_type,
+        done=True,
+        **{f"{media_type}_id": media_id}
+    ).all()
+    
+    return render_template("media.html", 
+                         media=media,
+                         user_media=user_media,
+                         planned_by=planned_by,
+                         consumed_by=consumed_by)
 
 @media_routes.route("/feed", methods=["GET"])
 @login_required
@@ -228,3 +248,33 @@ def notifications():
                                .order_by(Notification.created_at.desc())\
                                .limit(20).all()
     return render_template("notifications.html", notifications=notifs)
+
+@media_routes.route("/planner", methods=['GET'])
+@login_required
+def planner():
+    planned_items = UserMedia.query.filter_by(user_id=current_user.user_id, planned=True).all()
+    return render_template("planner.html", planned_items=planned_items)
+
+@media_routes.route("/media/add/planned", methods=["POST"])
+@login_required
+def add_to_planner():
+    title = request.form.get("title")
+    media_type = request.form.get("media_type")
+    if title and media_type:
+        existing_media = UserMedia.query.filter_by(user_id=current_user.id, title=title).first()
+        if existing_media:
+            flash('Media already exists in your planner or library.', 'warning')
+        else:
+            new_media = UserMedia(user_id=current_user.id, title=title, media_type=media_type, planned=True)
+            db.session.add(new_media)
+            db.session.commit()
+            flash('Media added to planner!', 'success')
+    else:
+        flash('Invalid input. Please provide a title and media type.', 'danger')
+    return redirect(url_for('media_routes.planner'))
+
+@media_routes.route('/add', methods=['POST'])
+@login_required
+def add_media():
+    # ... existing code ...
+    return redirect(url_for('main_routes.home'))

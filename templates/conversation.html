@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/messages.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="conversation-container" 
+         data-current-user-id="{{ current_user.user_id }}"
+         data-other-user-id="{{ other_user.user_id }}"
+         data-other-username="{{ other_user.username }}">
+        <!-- Header -->
+        <div class="conversation-header">
+            <div class="conversation-user">
+                <img src="{{ other_user.profile_picture or url_for('static', filename='defaults/user.png') }}" 
+                     class="conversation-avatar" alt="{{ other_user.username }}">
+                <div class="conversation-info">
+                    <h6>{{ other_user.username }}</h6>
+                    <div class="conversation-status">
+                        <span class="status-dot"></span>
+                        <span id="userStatus">Online</span>
+                    </div>
+                </div>
+            </div>
+            <div class="conversation-actions">
+                <button class="action-btn" onclick="shareMedia()" title="Share Media">
+                    <i class="fas fa-share"></i>
+                </button>
+                <button class="action-btn" onclick="showUserProfile()" title="View Profile">
+                    <i class="fas fa-user"></i>
+                </button>
+                <button class="action-btn" onclick="clearConversation()" title="Clear Chat">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Messages Area -->
+        <div class="messages-area" id="messagesArea">
+            {% for message in messages %}
+            <div class="message {% if message.sender_id == current_user.user_id %}sent{% else %}received{% endif %}" 
+                 data-message-id="{{ message.message_id }}">
+                <div class="message-bubble">
+                    {% if message.user_media_id %}
+                        <div class="media-share">
+                            <img src="{{ message.media_info.coverart or url_for('static', filename='defaults/user.png') }}" 
+                                 class="media-cover" alt="Media">
+                            <div class="media-info">
+                                <h6>{{ message.media_info.title }}</h6>
+                                <p>{{ message.media_info.author or message.media_info.director or message.media_info.artist }}</p>
+                            </div>
+                        </div>
+                    {% endif %}
+                    <div class="message-content">{{ message.content }}</div>
+                    <div class="message-time">
+                        {{ message.created_at.strftime('%H:%M') }}
+                        {% if message.sender_id == current_user.user_id %}
+                            <i class="fas fa-check-double {% if message.is_read %}text-primary{% endif %} ms-1"></i>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- Input Area -->
+        <div class="message-input-area">
+            <div class="message-input-container">
+                <textarea class="message-input" id="messageInput" 
+                          placeholder="Type a message..." rows="1"></textarea>
+                <button class="send-btn" id="sendBtn" onclick="sendMessage()">
+                    <i class="fas fa-paper-plane"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Share Media Modal -->
+<div class="modal fade" id="shareMediaModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Share Media</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label for="mediaSearch" class="form-label">Search media:</label>
+                    <input type="text" class="form-control" id="mediaSearch" placeholder="Search books, movies, or music...">
+                </div>
+                <div class="mb-3">
+                    <label for="mediaType" class="form-label">Media type:</label>
+                    <select class="form-select" id="mediaType">
+                        <option value="books">Books</option>
+                        <option value="cinema">Movies</option>
+                        <option value="music">Music</option>
+                    </select>
+                </div>
+                <div id="mediaSearchResults" class="row">
+                    <!-- Search results will appear here -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Get user data from HTML data attributes
+const container = document.querySelector('.conversation-container');
+const currentUserId = parseInt(container.dataset.currentUserId);
+const otherUserId = parseInt(container.dataset.otherUserId);
+const otherUsername = container.dataset.otherUsername;
+</script>
+<script src="{{ url_for('static', filename='js/conversation.js') }}"></script>
+{% endblock %} 

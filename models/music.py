@@ -59,7 +59,7 @@ def search_music_spotify(query, page=1):
     total_results = data.get('tracks', {}).get('total', 0)
     return music, total_results, page
 
-def save_music(music_data, user_id, review=None, rating=None, date_consumed=None):
+def save_music(music_data, user_id, review=None, rating=None, date_consumed=None, tags=None):
     from utils.completion import enrich_single_media_item
     existing_music = Music.query.filter_by(title=music_data.get('title')).first()
     if not existing_music:
@@ -76,11 +76,12 @@ def save_music(music_data, user_id, review=None, rating=None, date_consumed=None
         )
         db.session.add(music)
         db.session.flush()
-        # Enrich the music data before commit
-        enrich_single_media_item(music, "music")
+        # Enrich the music data before commit and get tags
+        generated_tags = enrich_single_media_item(music, "music")
     else:
         music = existing_music
-    
+        generated_tags = []
+
     user_media_entry = UserMedia.query.filter_by(user_id=user_id, media_type='music', music_id=music.music_id).first()
     if not user_media_entry:
         user_media_entry = UserMedia(
@@ -90,7 +91,8 @@ def save_music(music_data, user_id, review=None, rating=None, date_consumed=None
             review=review,
             rating=float(rating) if rating and rating != 'None' and 0 <= float(rating) <= 10 else None,
             date_consumed=date_consumed if date_consumed and date_consumed != '' else None,
-            done=True if date_consumed and date_consumed != '' else False
+            done=True if date_consumed and date_consumed != '' else False,
+            tags=generated_tags if generated_tags else (tags if tags is not None else [])
             )
         db.session.add(user_media_entry)
     else:
@@ -102,5 +104,9 @@ def save_music(music_data, user_id, review=None, rating=None, date_consumed=None
         if date_consumed and date_consumed != '':
             user_media_entry.date_consumed = date_consumed
             user_media_entry.done = True
+        if generated_tags:
+            user_media_entry.tags = generated_tags
+        elif tags is not None:
+            user_media_entry.tags = tags
     db.session.commit()
     return music

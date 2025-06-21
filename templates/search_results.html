@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Search Results</h2>
+    
+    <div class="row">
+        {% for media in results %}
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h5 class="card-title">{{ media.title }}</h5>
+                    {% if media.media_type == 'book' %}
+                        <p class="card-text">Author: {{ media.author }}</p>
+                        <p class="card-text">Genre: {{ media.genre }}</p>
+                    {% elif media.media_type == 'cinema' %}
+                        <p class="card-text">Director: {{ media.director }}</p>
+                        <p class="card-text">Genre: {{ media.genre }}</p>
+                    {% elif media.media_type == 'music' %}
+                        <p class="card-text">Artist: {{ media.artist }}</p>
+                        <p class="card-text">Genre: {{ media.genre }}</p>
+                    {% endif %}
+                    <a href="{{ url_for('main_routes.media_details', media_id=media.media_id) }}" class="btn btn-primary">
+                        <i class="fas fa-info-circle"></i> View Details
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %} 

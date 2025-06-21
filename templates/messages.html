@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/messages.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="row">
+        <div class="col-md-4">
+            <div class="messages-container">
+                <div class="conversations-sidebar">
+                    <!-- Search and New Message -->
+                    <div class="search-container">
+                        <input type="text" class="search-input" placeholder="Search conversations..." id="searchConversations">
+                        <button class="new-message-btn" onclick="showNewMessageModal()">
+                            <i class="fas fa-plus"></i> New Message
+                        </button>
+                    </div>
+
+                    <!-- Conversations List -->
+                    <div class="conversations-list">
+                        {% if conversations %}
+                            {% for conv in conversations %}
+                            <div class="conversation-item {% if conv.unread_count > 0 %}unread{% endif %}" 
+                                 data-user-id="{{ conv.user.user_id }}">
+                                <div class="d-flex align-items-center">
+                                    <div class="position-relative me-3">
+                                        <img src="{{ conv.user.profile_picture or url_for('static', filename='defaults/user.png') }}" 
+                                             class="conversation-avatar" alt="{{ conv.user.username }}">
+                                        <div class="conversation-status {% if conv.user.is_online %}online{% else %}offline{% endif %}"></div>
+                                    </div>
+                                    <div class="conversation-content">
+                                        <div class="conversation-name">{{ conv.user.username }}</div>
+                                        {% if conv.latest_message %}
+                                            <div class="conversation-preview">
+                                                {% if conv.latest_message.sender_id == current_user.user_id %}
+                                                    <i class="fas fa-reply text-muted me-1"></i>
+                                                {% endif %}
+                                                {{ conv.latest_message.content[:50] }}{% if conv.latest_message.content|length > 50 %}...{% endif %}
+                                            </div>
+                                            <div class="conversation-time">
+                                                {{ conv.latest_message.created_at.strftime('%b %d, %H:%M') }}
+                                            </div>
+                                        {% else %}
+                                            <div class="conversation-preview text-muted">No messages yet</div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                {% if conv.unread_count > 0 %}
+                                <div class="unread-badge">{{ conv.unread_count }}</div>
+                                {% endif %}
+                            </div>
+                            {% endfor %}
+                        {% else %}
+                            <div class="empty-state">
+                                <i class="fas fa-comments"></i>
+                                <h5>No conversations yet</h5>
+                                <p>Start a conversation by sending a message to someone!</p>
+                                <button class="new-message-btn" onclick="showNewMessageModal()">
+                                    <i class="fas fa-plus"></i> Start New Conversation
+                                </button>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Conversation Area -->
+        <div class="col-md-8">
+            <div class="messages-container">
+                <div id="conversationArea" class="h-100 d-flex align-items-center justify-content-center">
+                    <div class="text-center text-muted">
+                        <i class="fas fa-comments fa-3x mb-3"></i>
+                        <h5>Select a conversation</h5>
+                        <p>Choose a conversation from the list to start messaging</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- New Message Modal -->
+<div class="modal fade" id="newMessageModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">New Message</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label for="userSearch" class="form-label">Search users:</label>
+                    <input type="text" class="form-control" id="userSearch" placeholder="Type username...">
+                </div>
+                <div id="userSearchResults" class="list-group">
+                    <!-- Search results will appear here -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="{{ url_for('static', filename='js/messages.js') }}"></script>
+{% endblock %} 

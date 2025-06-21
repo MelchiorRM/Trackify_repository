@@ -12,173 +12,60 @@
     </p>
     {% endif %}
 
-    <!-- Books -->
-    <h2 class="mt-5 mb-3">📚 Books</h2>
-    {% if books %}
-    <div class="row">
-        {% for book in books %}
-        <div class="col-md-6 col-lg-4 mb-3">
-            <div class="card h-100 shadow-sm">
-                <div class="card-body">
-                    <h5 class="card-title">{{ book.title }}</h5>
-                    <p class="card-text">Author: {{ book.author }}<br>Genre: {{ book.genre }}</p>
-                </div>
-            </div>
-        </div>
-        {% endfor %}
+    <div class="mb-4 text-center">
+        <label for="typeFilter" class="form-label">Filter by type:</label>
+        <select id="typeFilter" class="form-select" style="width: 200px; margin: 0 auto;">
+            <option value="all" {% if type_filter == 'all' %}selected{% endif %}>All</option>
+            <option value="book" {% if type_filter == 'book' %}selected{% endif %}>Books</option>
+            <option value="cinema" {% if type_filter == 'cinema' %}selected{% endif %}>Cinema</option>
+            <option value="music" {% if type_filter == 'music' %}selected{% endif %}>Music</option>
+        </select>
     </div>
-    {% else %}
-    <p>No book recommendations available.</p>
-    {% endif %}
 
-    <!-- Movies -->
-    <h2 class="mt-5 mb-3">🎬 Movies</h2>
-    {% if movies %}
-    <div class="row">
-        {% for movie in movies %}
-        <div class="col-md-6 col-lg-4 mb-3">
+    {% if recommendations %}
+    <div class="row" id="recommendationsContainer">
+        {% for rec in recommendations %}
+        <div class="col-md-6 col-lg-4 mb-3 recommendation-item" data-type="{{ rec.type }}">
             <div class="card h-100 shadow-sm">
                 <div class="card-body">
-                    <h5 class="card-title">{{ movie.title }}</h5>
-                    <p class="card-text">Genre: {{ movie.genre }}<br>Director: {{ movie.director }}</p>
+                    <h5 class="card-title">{{ rec.item.title if rec.item.title is defined else rec.item['title'] }}</h5>
+                    {% if rec.type == 'book' %}
+                    <p class="card-text">
+                        Author: {{ rec.item.author if rec.item.author is defined else 'Unknown' }}<br>
+                        Genre: {{ rec.item.genre if rec.item.genre is defined else 'Unknown' }}
+                    </p>
+                    {% elif rec.type == 'cinema' %}
+                    <p class="card-text">
+                        Genre: {{ rec.item.genre if rec.item.genre is defined else 'Unknown' }}<br>
+                        Director: {{ rec.item.director if rec.item.director is defined else 'Unknown' }}
+                    </p>
+                    {% elif rec.type == 'music' %}
+                    <p class="card-text">
+                        Artist: {{ rec.item.artist if rec.item.artist is defined else 'Unknown' }}<br>
+                        Genre: {{ rec.item.genre if rec.item.genre is defined else 'Unknown' }}
+                    </p>
+                    {% endif %}
                 </div>
             </div>
         </div>
         {% endfor %}
     </div>
     {% else %}
-    <p>No movie recommendations available.</p>
-    {% endif %}
-
-    <!-- Music -->
-    <h2 class="mt-5 mb-3">🎵 Music</h2>
-    {% if music %}
-    <div class="row">
-        {% for track in music %}
-        <div class="col-md-6 col-lg-4 mb-3">
-            <div class="card h-100 shadow-sm">
-                <div class="card-body">
-                    <h5 class="card-title">{{ track.title }}</h5>
-                    <p class="card-text">Artist: {{ track.artist }}<br>Genre: {{ track.genre }}</p>
-                </div>
-            </div>
-        </div>
-        {% endfor %}
-    </div>
-    {% else %}
-    <p>No music recommendations available.</p>
-    {% endif %}
-
-    <!-- Collaborative Filtering -->
-    <h2 class="mt-5 mb-3">👥 Collaborative Recommendations</h2>
-    <h3>📚 Books</h3>
-    {% if commun_books %}
-    <div class="row">
-        {% for book in commun_books %}
-        <div class="col-md-6 col-lg-4 mb-3">
-            <div class="card h-100 shadow-sm">
-                <div class="card-body">
-                    <h5 class="card-title">{{ book.title }}</h5>
-                    <p class="card-text">Author: {{ book.author }}</p>
-                </div>
-            </div>
-        </div>
-        {% endfor %}
-    </div>
-    {% else %}
-    <p>No collaborative book recommendations available.</p>
-    {% endif %}
-
-    <h3>🎬 Movies</h3>
-    {% if commun_movies %}
-    <div class="row">
-        {% for movie in commun_movies %}
-        <div class="col-md-6 col-lg-4 mb-3">
-            <div class="card h-100 shadow-sm">
-                <div class="card-body">
-                    <h5 class="card-title">{{ movie.title }}</h5>
-                    <p class="card-text">Genre: {{ movie.genre }}</p>
-                </div>
-            </div>
-        </div>
-        {% endfor %}
-    </div>
-    {% else %}
-    <p>No collaborative movie recommendations available.</p>
-    {% endif %}
-
-    <h3>🎵 Music</h3>
-    {% if commun_music %}
-    <div class="row">
-        {% for track in commun_music %}
-        <div class="col-md-6 col-lg-4 mb-3">
-            <div class="card h-100 shadow-sm">
-                <div class="card-body">
-                    <h5 class="card-title">{{ track.title }}</h5>
-                    <p class="card-text">Artist: {{ track.artist }}</p>
-                </div>
-            </div>
-        </div>
-        {% endfor %}
-    </div>
-    {% else %}
-    <p>No collaborative music recommendations available.</p>
-    {% endif %}
-
-    <!-- Gemini-Based -->
-    <h2 class="mt-5 mb-3">🧠 Gemini-Powered Recommendations</h2>
-    <h3>📚 Books</h3>
-    {% if gemini_books %}
-    <div class="row">
-        {% for book in gemini_books %}
-        <div class="col-md-6 col-lg-4 mb-3">
-            <div class="card h-100 shadow-sm">
-                <div class="card-body">
-                    <h5 class="card-title">{{ book.title }}</h5>
-                    <p class="card-text">Author: {{ book.author }}</p>
-                </div>
-            </div>
-        </div>
-        {% endfor %}
-    </div>
-    {% else %}
-    <p>No Gemini-powered book recommendations available.</p>
-    {% endif %}
-
-    <h3>🎬 Movies</h3>
-    {% if gemini_movies %}
-    <div class="row">
-        {% for movie in gemini_movies %}
-        <div class="col-md-6 col-lg-4 mb-3">
-            <div class="card h-100 shadow-sm">
-                <div class="card-body">
-                    <h5 class="card-title">{{ movie.title }}</h5>
-                    <p class="card-text">Genre: {{ movie.genre }}</p>
-                </div>
-            </div>
-        </div>
-        {% endfor %}
-    </div>
-    {% else %}
-    <p>No Gemini-powered movie recommendations available.</p>
-    {% endif %}
-
-    <h3>🎵 Music</h3>
-    {% if gemini_music %}
-    <div class="row">
-        {% for track in gemini_music %}
-        <div class="col-md-6 col-lg-4 mb-3">
-            <div class="card h-100 shadow-sm">
-                <div class="card-body">
-                    <h5 class="card-title">{{ track.title }}</h5>
-                    <p class="card-text">Artist: {{ track.artist }}</p>
-                </div>
-            </div>
-        </div>
-        {% endfor %}
-    </div>
-    {% else %}
-    <p>No Gemini-powered music recommendations available.</p>
+    <p>No recommendations available.</p>
     {% endif %}
 </div>
+
+<script>
+document.getElementById('typeFilter').addEventListener('change', function() {
+    const selectedType = this.value;
+    const items = document.querySelectorAll('.recommendation-item');
+    items.forEach(item => {
+        if (selectedType === 'all' || item.getAttribute('data-type') === selectedType) {
+            item.style.display = '';
+        } else {
+            item.style.display = 'none';
+        }
+    });
+});
+</script>
 {% endblock %}

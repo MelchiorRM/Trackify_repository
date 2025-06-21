@@ -1,0 +1,169 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <!-- Network Header -->
+        <div class="col-12 mb-4">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h4 class="mb-0">Network</h4>
+                        <div class="btn-group">
+                            <button type="button" class="btn btn-outline-primary active" id="followersTab">
+                                Followers ({{ followers.count() }})
+                            </button>
+                            <button type="button" class="btn btn-outline-primary" id="followingTab">
+                                Following ({{ following.count() }})
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Followers Section -->
+        <div class="col-12" id="followersSection">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Followers</h5>
+                </div>
+                <div class="card-body">
+                    {% if followers.all() %}
+                        <div class="row">
+                            {% for follower in followers.all() %}
+                                <div class="col-md-6 col-lg-4 mb-4">
+                                    <div class="card h-100">
+                                        <div class="card-body">
+                                            <div class="d-flex align-items-center mb-3">
+                                                <img src="{{ follower.profile_picture or url_for('static', filename='default_profile.png') }}" 
+                                                     class="rounded-circle me-3" style="width: 50px; height: 50px; object-fit: cover;">
+                                                <div>
+                                                    <h6 class="mb-0">{{ follower.username }}</h6>
+                                                    <small class="text-muted">{{ follower.followers.count() }} followers</small>
+                                                </div>
+                                            </div>
+                                            <p class="card-text">{{ follower.bio or 'No bio yet' }}</p>
+                                            <div class="d-flex justify-content-between">
+                                                <a href="{{ url_for('main_routes.profile', username=follower.username) }}" 
+                                                   class="btn btn-sm btn-outline-primary">View Profile</a>
+                                                <form action="{{ url_for('user_routes.follow', username=follower.username) }}" 
+                                                      method="POST" class="d-inline">
+                                                    <button type="submit" class="btn btn-sm btn-primary">
+                                                        {% if current_user.is_following(follower) %}
+                                                            Unfollow
+                                                        {% else %}
+                                                            Follow
+                                                        {% endif %}
+                                                    </button>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <p class="text-muted text-center">No followers yet.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Following Section -->
+        <div class="col-12 d-none" id="followingSection">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Following</h5>
+                </div>
+                <div class="card-body">
+                    {% if following.all() %}
+                        <div class="row">
+                            {% for followed in following.all() %}
+                                <div class="col-md-6 col-lg-4 mb-4">
+                                    <div class="card h-100">
+                                        <div class="card-body">
+                                            <div class="d-flex align-items-center mb-3">
+                                                <img src="{{ followed.profile_picture or url_for('static', filename='default_profile.png') }}" 
+                                                     class="rounded-circle me-3" style="width: 50px; height: 50px; object-fit: cover;">
+                                                <div>
+                                                    <h6 class="mb-0">{{ followed.username }}</h6>
+                                                    <small class="text-muted">{{ followed.followers.count() }} followers</small>
+                                                </div>
+                                            </div>
+                                            <p class="card-text">{{ followed.bio or 'No bio yet' }}</p>
+                                            <div class="d-flex justify-content-between">
+                                                <a href="{{ url_for('main_routes.profile', username=followed.username) }}" 
+                                                   class="btn btn-sm btn-outline-primary">View Profile</a>
+                                                <form action="{{ url_for('user_routes.unfollow', username=followed.username) }}" 
+                                                      method="POST" class="d-inline">
+                                                    <button type="submit" class="btn btn-sm btn-danger">Unfollow</button>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <p class="text-muted text-center">Not following anyone yet.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Search Users -->
+        <div class="col-12 mt-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Find Users</h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('user_routes.search_users') }}" class="mb-4">
+                        <div class="input-group">
+                            <input type="text" name="query" class="form-control" 
+                                   placeholder="Search by username" required>
+                            <button type="submit" class="btn btn-primary">Search</button>
+                        </div>
+                    </form>
+                    {% if search_results %}
+                        <div class="row">
+                            {% for user in search_results %}
+                                <div class="col-md-6 col-lg-4 mb-4">
+                                    <div class="card h-100">
+                                        <div class="card-body">
+                                            <div class="d-flex align-items-center mb-3">
+                                                <img src="{{ user.profile_picture or url_for('static', filename='default_profile.png') }}" 
+                                                     class="rounded-circle me-3" style="width: 50px; height: 50px; object-fit: cover;">
+                                                <div>
+                                                    <h6 class="mb-0">{{ user.username }}</h6>
+                                                    <small class="text-muted">{{ user.followers.count() }} followers</small>
+                                                </div>
+                                            </div>
+                                            <p class="card-text">{{ user.bio or 'No bio yet' }}</p>
+                                            <div class="d-flex justify-content-between">
+                                                <a href="{{ url_for('main_routes.profile', username=user.username) }}" 
+                                                   class="btn btn-sm btn-outline-primary">View Profile</a>
+                                                <form action="{{ url_for('user_routes.follow', username=user.username) }}" 
+                                                      method="POST" class="d-inline">
+                                                    <button type="submit" class="btn btn-sm btn-primary">
+                                                        {% if current_user.is_following(user) %}
+                                                            Unfollow
+                                                        {% else %}
+                                                            Follow
+                                                        {% endif %}
+                                                    </button>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

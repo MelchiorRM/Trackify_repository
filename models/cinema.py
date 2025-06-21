@@ -78,7 +78,7 @@ def get_genre_names(genre_ids, api_key):
     genre_dict = {genre['id']: genre['name'] for genre in data.get('genres', [])}
     return [genre_dict.get(genre_id, "Unknown") for genre_id in genre_ids]
 
-def save_cinema(cinema_data, user_id,review=None, rating=None, date_consumed=None):
+def save_cinema(cinema_data, user_id,review=None, rating=None, date_consumed=None, tags=None):
     from utils.completion import enrich_single_media_item
     existing_cinema = Cinema.query.filter_by(title=cinema_data.get("title")).first()
     if not existing_cinema:
@@ -95,10 +95,11 @@ def save_cinema(cinema_data, user_id,review=None, rating=None, date_consumed=Non
         )
         db.session.add(cinema)
         db.session.flush()
-        # Enrich the cinema data before commit
-        enrich_single_media_item(cinema, "movie")
+        # Enrich the cinema data before commit and get tags
+        generated_tags = enrich_single_media_item(cinema, "movie")
     else:
         cinema = existing_cinema
+        generated_tags = []
 
     user_media_entry = UserMedia.query.filter_by(user_id=user_id, media_type='cinema', cinema_id=cinema.cinema_id).first()
     if not user_media_entry:
@@ -109,7 +110,8 @@ def save_cinema(cinema_data, user_id,review=None, rating=None, date_consumed=Non
             review=review,
             rating=float(rating) if rating and rating != 'None' else None,
             date_consumed=date_consumed if date_consumed and date_consumed != '' else None,
-            done=True if date_consumed and date_consumed != '' else False
+            done=True if date_consumed and date_consumed != '' else False,
+            tags=generated_tags if generated_tags else (tags if tags is not None else [])
         )
         db.session.add(user_media_entry)
     else:
@@ -120,5 +122,9 @@ def save_cinema(cinema_data, user_id,review=None, rating=None, date_consumed=Non
         if date_consumed and date_consumed != '':
             user_media_entry.date_consumed = date_consumed
         user_media_entry.done = True if date_consumed and date_consumed != '' else False
+        if generated_tags:
+            user_media_entry.tags = generated_tags
+        elif tags is not None:
+            user_media_entry.tags = tags
     db.session.commit()
     return cinema

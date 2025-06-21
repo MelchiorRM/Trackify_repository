@@ -1,26 +1,142 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="form-container profile-form">
-    <h1 class="text-center mb-4">Edit Profile</h1>
-    <form method="POST" enctype="multipart/form-data">
-        <label for="username">Username:</label>
-        <input type="text" id="username" name="username" value="{{ current_user.username }}" required><br>
-
-        <label for="email">Email:</label>
-        <input type="email" id="email" name="email" value="{{ current_user.email }}" required><br>
-
-        <label for="password">Password:</label>
-        <input type="password" id="password" name="password" required><br>
-
-        <label for="profile_picture">Profile Picture:</label>
-        <input type="file" id="profile_picture" name="profile_picture"><br>
-
-        <button type="submit" class="btn btn-primary">Save Changes</button>
-        <button type="submit" name="delete_picture" class="btn btn-danger ml-2">Delete Profile Picture</button>
+<div class="container mt-4">
+    <div class="row">
+        <!-- Profile Header -->
+        <div class="col-12">
+            <div class="card mb-4">
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3 text-center">
+                            <img src="{{ user.profile_picture or url_for('static', filename='default_profile.png') }}" 
+                                 class="rounded-circle mb-3" style="width: 150px; height: 150px; object-fit: cover;">
+                        </div>
+                        <div class="col-md-9">
+                            <h2>{{ user.username }}</h2>
+                            <p class="text-muted">{{ user.bio or 'No bio yet' }}</p>
+                            <div class="d-flex gap-3 mb-3">
+                                <div>
+                                    <strong>{{ followers_count }}</strong> Followers
+                                </div>
+                                <div>
+                                    <strong>{{ following_count }}</strong> Following
+                                </div>
+                            </div>
+                            {% if user.id != current_user.id %}
+                                <form action="{{ url_for('user_routes.follow', username=user.username) }}" method="POST" class="d-inline">
+                                    <button type="submit" class="btn btn-primary">
+                                        {% if current_user.is_following(user) %}
+                                            Unfollow
+                                        {% else %}
+                                            Follow
+                                        {% endif %}
+                                    </button>
     </form>
-    <div class="text-center mt-3">
-        <a href="{{ url_for('user_routes.dashboard') }}" class="btn btn-secondary">Back to Dashboard</a>
+                            {% else %}
+                                <a href="{{ url_for('main_routes.settings') }}" class="btn btn-outline-primary">Edit Profile</a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Activity Preview -->
+        <div class="col-md-8">
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h4>Recent Activity</h4>
+                    <a href="{{ url_for('main_routes.stats') }}" class="btn btn-sm btn-outline-primary">View All</a>
+                </div>
+                <div class="card-body">
+                    {% if recent_activity %}
+                        {% for activity in recent_activity %}
+                            <div class="activity-item mb-3 pb-3 border-bottom">
+                                <div class="d-flex">
+                                    <img src="{{ activity.cover_art or url_for('static', filename='default_cover.png') }}" 
+                                         class="me-3" style="width: 50px; height: 75px; object-fit: cover;">
+                                    <div>
+                                        <h6 class="mb-1">
+                                            {% if activity.media_type == 'book' %}
+                                                {{ activity.book.title }}
+                                            {% elif activity.media_type == 'cinema' %}
+                                                {{ activity.cinema.title }}
+                                            {% else %}
+                                                {{ activity.music.title }}
+                                            {% endif %}
+                                        </h6>
+                                        <p class="mb-1 text-muted">
+                                            {{ activity.created_at.strftime('%B %d, %Y') }}
+                                        </p>
+                                        {% if activity.rating %}
+                                            <div class="rating">
+                                                <span class="text-warning">★</span> {{ activity.rating }}/5
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <p class="text-muted">No recent activity to show.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="col-md-4">
+            <!-- Diary Preview -->
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5>Recent Diary Entries</h5>
+                    <a href="{{ url_for('main_routes.planner') }}" class="btn btn-sm btn-outline-primary">View All</a>
+                </div>
+                <div class="card-body">
+                    {% if diary_entries %}
+                        {% for entry in diary_entries %}
+                            <div class="diary-entry mb-3">
+                                <h6 class="mb-1">
+                                    {% if entry.media_type == 'book' %}
+                                        {{ entry.book.title }}
+                                    {% elif entry.media_type == 'cinema' %}
+                                        {{ entry.cinema.title }}
+                                    {% else %}
+                                        {{ entry.music.title }}
+                                    {% endif %}
+                                </h6>
+                                <p class="mb-1 text-muted">{{ entry.created_at.strftime('%B %d, %Y') }}</p>
+                                {% if entry.review %}
+                                    <p class="mb-0">{{ entry.review[:100] }}...</p>
+                                {% endif %}
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <p class="text-muted">No diary entries to show.</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Network Stats -->
+            <div class="card">
+                <div class="card-header">
+                    <h5>Network</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-6">
+                            <h4>{{ followers_count }}</h4>
+                            <small>Followers</small>
+                        </div>
+                        <div class="col-6">
+                            <h4>{{ following_count }}</h4>
+                            <small>Following</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 {% endblock %}

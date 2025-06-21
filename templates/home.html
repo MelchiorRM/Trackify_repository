@@ -1,0 +1,162 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <!-- Post Creation Section -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('post_routes.create_post') }}" id="quickPostForm">
+                        <div class="d-flex align-items-center mb-3">
+                            <img src="{{ current_user.profile_picture or url_for('static', filename='defaults/user.png') }}" 
+                                 class="rounded-circle me-3" style="width: 50px; height: 50px; object-fit: cover;">
+                            <div class="flex-grow-1">
+                                <textarea class="form-control" name="content" rows="3" 
+                                          placeholder="What's on your mind? Share your thoughts..." 
+                                          style="resize: none; border: none; box-shadow: none;" required></textarea>
+                            </div>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div class="d-flex gap-2">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-paper-plane"></i> Post
+                                </button>
+                            </div>
+                            <div class="d-flex gap-1">
+                                <a href="{{ url_for('media_routes.books') }}" class="btn btn-sm btn-outline-success">
+                                    <i class="fas fa-book"></i> Post Book
+                                </a>
+                                <a href="{{ url_for('media_routes.cinema') }}" class="btn btn-sm btn-outline-info">
+                                    <i class="fas fa-film"></i> Post Movie
+                                </a>
+                                <a href="{{ url_for('media_routes.music') }}" class="btn btn-sm btn-outline-warning">
+                                    <i class="fas fa-music"></i> Post Music
+                                </a>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Quick Actions Sidebar -->
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Quick Actions</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a href="{{ url_for('post_routes.posts') }}" class="btn btn-primary">
+                            <i class="fas fa-stream"></i> View Posts Feed
+                        </a>
+                        <a href="{{ url_for('media_routes.feed') }}" class="btn btn-outline-primary">
+                            <i class="fas fa-rss"></i> Activities
+                        </a>
+                        <a href="{{ url_for('main_routes.diary') }}" class="btn btn-outline-success">
+                            <i class="fas fa-journal-whills"></i> Diary
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Main Content Area -->
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h4>Welcome to Trackify!</h4>
+                </div>
+                <div class="card-body">
+                    <p class="mb-3">Track your media consumption and discover new content through your network.</p>
+                    <div class="d-flex gap-2">
+                        <a href="{{ url_for('post_routes.posts') }}" class="btn btn-primary">
+                            <i class="fas fa-stream"></i> View Posts Feed
+                        </a>
+                        <a href="{{ url_for('media_routes.feed') }}" class="btn btn-outline-primary">
+                            <i class="fas fa-rss"></i> Activities
+                        </a>
+                        <a href="{{ url_for('main_routes.diary') }}" class="btn btn-outline-success">
+                            <i class="fas fa-journal-whills"></i> Diary
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="col-md-4">
+            <!-- Recent Media -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5>Your Latest Media</h5>
+                </div>
+                <div class="card-body">
+                    {% if recent_media %}
+                        {% for media in recent_media %}
+                            <div class="media-item mb-3">
+                                <div class="d-flex align-items-center">
+                                    <img src="{{ media.cover_art or url_for('static', filename='defaults/user.png') }}" 
+                                         class="me-2" style="width: 50px; height: 75px; object-fit: cover;">
+                                    <div>
+                                        <h6 class="mb-0">
+                                            {% if media.media_type == 'book' %}
+                                                {{ media.book.title }}
+                                            {% elif media.media_type == 'cinema' %}
+                                                {{ media.cinema.title }}
+                                            {% else %}
+                                                {{ media.music.title }}
+                                            {% endif %}
+                                        </h6>
+                                        <small class="text-muted">{{ media.media_type|title }} • {{ media.created_at.strftime('%B %d, %Y') }}</small>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <p class="text-muted">No media to show.</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Quick Stats -->
+            <div class="card">
+                <div class="card-header">
+                    <h5>Quick Stats</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-md-4">
+                            <div class="card text-center">
+                                <div class="card-body">
+                                    <h5>Books</h5>
+                                    <h4>{{ recent_media|selectattr('media_type', 'equalto', 'book')|list|length }}</h4>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card text-center">
+                                <div class="card-body">
+                                    <h5>Movies</h5>
+                                    <h4>{{ recent_media|selectattr('media_type', 'equalto', 'cinema')|list|length }}</h4>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card text-center">
+                                <div class="card-body">
+                                    <h5>Music</h5>
+                                    <h4>{{ recent_media|selectattr('media_type', 'equalto', 'music')|list|length }}</h4>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 
