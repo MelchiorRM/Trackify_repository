@@ -17,51 +17,50 @@
     <div class="row">
         {% for book in books %}
         <div class="col-md-6 col-lg-4 mb-4">
-            <div class="card h-100 shadow-sm">
-                {% if book.coverart %}
-                <img src="{{ book.coverart }}" class="card-img-top" alt="{{ book.title }}">
-                {% endif %}
-                <div class="card-body">
-                    <h5 class="card-title">{{ book.title }}</h5>
-                    <p class="card-text">Author: {{ book.author }}</p>
-                    
-                    <!-- Add Book Form -->
-                    <form method="POST" action="{{ url_for('media_routes.books') }}" class="mt-3">
-                        <input type="hidden" name="title" value="{{ book.title }}">
-                        <input type="hidden" name="author" value="{{ book.author }}">
-                        <input type="hidden" name="genre" value="{{ book.genre or '' }}">
-                        <input type="hidden" name="year" value="{{ book.year or '' }}">
-                        <input type="hidden" name="language" value="{{ book.language or '' }}">
-                        <input type="hidden" name="publisher" value="{{ book.publisher or '' }}">
-                        <input type="hidden" name="country" value="{{ book.country or '' }}">
-                        <input type="hidden" name="coverart" value="{{ book.coverart or '' }}">
-                        
-                        <!-- Rating Section -->
-                        <div class="mb-3">
-                            <label class="form-label">Rating (optional)</label>
-                            <div class="rating-input">
-                                {% for i in range(1, 6) %}
-                                <input type="radio" name="rating" value="{{ i }}" id="star{{ loop.index }}_{{ i }}" class="rating-radio">
-                                <label for="star{{ loop.index }}_{{ i }}" class="rating-star">★</label>
-                                {% endfor %}
-                            </div>
+            {% set book_id = book.book_id if book.book_id is defined else (book['book_id'] if 'book_id' in book else None) %}
+            {% if book_id %}
+                <!-- Local database book - link to media detail page -->
+                <a href="{{ url_for('media_routes.media', media_type='book', media_id=book_id) }}" class="text-decoration-none">
+                    <div class="card h-100 shadow-sm hover-card">
+                        {% if book.coverart %}
+                        <img src="{{ book.coverart }}" class="card-img-top" alt="{{ book.title }}">
+                        {% endif %}
+                        <div class="card-body">
+                            <h5 class="card-title text-dark">{{ book.title }}</h5>
+                            <p class="card-text text-muted">Author: {{ book.author }}</p>
+                            {% if book.genre %}
+                            <p class="card-text text-muted">Genre: {{ book.genre }}</p>
+                            {% endif %}
+                            {% if book.year %}
+                            <p class="card-text text-muted">Year: {{ book.year }}</p>
+                            {% endif %}
                         </div>
-                        
-                        <!-- Date Consumed -->
-                        <div class="mb-3">
-                            <label for="date_consumed_{{ loop.index }}" class="form-label">Date Consumed (optional)</label>
-                            <input type="date" class="form-control" id="date_consumed_{{ loop.index }}" name="date_consumed">
+                        <div class="card-footer bg-transparent">
+                            <span class="btn btn-primary btn-block">View Details</span>
                         </div>
-                        
-                        <button type="submit" class="btn btn-success btn-block w-100">
-                            <i class="fas fa-plus"></i> Add to Library
-                        </button>
-                    </form>
+                    </div>
+                </a>
+            {% else %}
+                <!-- External API book - show details in modal or add to library -->
+                <div class="card h-100 shadow-sm hover-card" data-book-title="{{ book.title|e }}" data-book-author="{{ book.author|e }}" data-book-genre="{{ book.genre|e if book.genre else '' }}" data-book-coverart="{{ book.coverart|e if book.coverart else '' }}" data-book-year="{{ book.year|e if book.year else '' }}" data-book-description="{{ book.reviews|e if book.reviews else '' }}" onclick="showBookDetailsFromData(this)">
+                    {% if book.coverart %}
+                    <img src="{{ book.coverart }}" class="card-img-top" alt="{{ book.title }}">
+                    {% endif %}
+                    <div class="card-body">
+                        <h5 class="card-title text-dark">{{ book.title }}</h5>
+                        <p class="card-text text-muted">Author: {{ book.author }}</p>
+                        {% if book.genre %}
+                        <p class="card-text text-muted">Genre: {{ book.genre }}</p>
+                        {% endif %}
+                        {% if book.year %}
+                        <p class="card-text text-muted">Year: {{ book.year }}</p>
+                        {% endif %}
+                    </div>
+                    <div class="card-footer bg-transparent">
+                        <span class="btn btn-outline-primary btn-block">View Details</span>
+                    </div>
                 </div>
-                <div class="card-footer">
-                    <a href="{{ url_for('media_routes.media', media_type='book', media_id=book.get('book_id', 0)) }}" class="btn btn-primary btn-block">View Details</a>
-                </div>
-            </div>
+            {% endif %}
         </div>
         {% endfor %}
     </div>
@@ -81,32 +80,114 @@
     </div>
 </div>
 
+<!-- Book Details Modal -->
+<div class="modal fade" id="bookDetailsModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="bookModalTitle"></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-4">
+                        <img id="bookModalCover" src="" alt="Book Cover" class="img-fluid rounded">
+                    </div>
+                    <div class="col-md-8">
+                        <h6>Author: <span id="bookModalAuthor"></span></h6>
+                        <h6>Genre: <span id="bookModalGenre"></span></h6>
+                        <h6>Year: <span id="bookModalYear"></span></h6>
+                        <div class="mt-3">
+                            <h6>Description:</h6>
+                            <p id="bookModalDescription"></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" onclick="addBookToLibrary()">Add to Library</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <style>
-.rating-input {
-    display: flex;
-    flex-direction: row-reverse;
-    gap: 5px;
-}
-
-.rating-radio {
-    display: none;
-}
-
-.rating-star {
-    font-size: 1.5rem;
-    color: #ddd;
+.hover-card {
+    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
     cursor: pointer;
-    transition: color 0.2s;
 }
 
-.rating-star:hover,
-.rating-star:hover ~ .rating-star,
-.rating-radio:checked ~ .rating-star {
-    color: #ffc107;
+.hover-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1) !important;
 }
 
-.rating-radio:checked ~ .rating-star {
-    color: #ffc107;
+.card-footer .btn {
+    pointer-events: none;
 }
 </style>
+
+<script>
+let currentBookData = {};
+
+function showBookDetailsFromData(element) {
+    const title = element.getAttribute('data-book-title');
+    const author = element.getAttribute('data-book-author');
+    const genre = element.getAttribute('data-book-genre');
+    const coverart = element.getAttribute('data-book-coverart');
+    const year = element.getAttribute('data-book-year');
+    const description = element.getAttribute('data-book-description');
+    
+    currentBookData = { title, author, genre, coverart, year, description };
+    
+    document.getElementById('bookModalTitle').textContent = title;
+    document.getElementById('bookModalAuthor').textContent = author;
+    document.getElementById('bookModalGenre').textContent = genre || 'Unknown';
+    document.getElementById('bookModalYear').textContent = year || 'Unknown';
+    document.getElementById('bookModalDescription').textContent = description || 'No description available.';
+    
+    const coverImg = document.getElementById('bookModalCover');
+    if (coverart) {
+        coverImg.src = coverart;
+        coverImg.style.display = 'block';
+    } else {
+        coverImg.style.display = 'none';
+    }
+    
+    const modal = new bootstrap.Modal(document.getElementById('bookDetailsModal'));
+    modal.show();
+}
+
+function addBookToLibrary() {
+    // Save the book data to the database and redirect to media detail page
+    fetch('/media/save_external', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            media_type: 'book',
+            media_data: currentBookData
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Show success message and redirect to media detail page
+            alert(data.message);
+            window.location.href = data.redirect_url;
+        } else {
+            alert('Error: ' + data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Network error occurred');
+    });
+    
+    const modal = bootstrap.Modal.getInstance(document.getElementById('bookDetailsModal'));
+    modal.hide();
+}
+</script>
 {% endblock %}

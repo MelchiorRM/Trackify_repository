@@ -25,26 +25,10 @@
                             <div class="conversation-item {% if conv.unread_count > 0 %}unread{% endif %}" 
                                  data-user-id="{{ conv.user.user_id }}">
                                 <div class="d-flex align-items-center">
-                                    <div class="position-relative me-3">
-                                        <img src="{{ conv.user.profile_picture or url_for('static', filename='defaults/user.png') }}" 
-                                             class="conversation-avatar" alt="{{ conv.user.username }}">
-                                        <div class="conversation-status {% if conv.user.is_online %}online{% else %}offline{% endif %}"></div>
-                                    </div>
-                                    <div class="conversation-content">
-                                        <div class="conversation-name">{{ conv.user.username }}</div>
-                                        {% if conv.latest_message %}
-                                            <div class="conversation-preview">
-                                                {% if conv.latest_message.sender_id == current_user.user_id %}
-                                                    <i class="fas fa-reply text-muted me-1"></i>
-                                                {% endif %}
-                                                {{ conv.latest_message.content[:50] }}{% if conv.latest_message.content|length > 50 %}...{% endif %}
-                                            </div>
-                                            <div class="conversation-time">
-                                                {{ conv.latest_message.created_at.strftime('%b %d, %H:%M') }}
-                                            </div>
-                                        {% else %}
-                                            <div class="conversation-preview text-muted">No messages yet</div>
-                                        {% endif %}
+                                    <img src="{{ url_for('static', filename=conv.user.profile_picture) }}" alt="Profile picture of {{ conv.user.username }}" class="rounded-circle" width="50" height="50">
+                                    <div class="ms-3">
+                                        <h6 class="mb-0">{{ conv.user.username }}</h6>
+                                        <small class="text-muted">{{ conv.latest_message.content | truncate(30) }}</small>
                                     </div>
                                 </div>
                                 {% if conv.unread_count > 0 %}

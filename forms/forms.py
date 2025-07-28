@@ -1,6 +1,7 @@
 from flask_wtf import FlaskForm
-from wtforms import StringField, PasswordField, BooleanField, SubmitField, SelectField
-from wtforms.validators import DataRequired, Email, Length, EqualTo, ValidationError
+from flask_wtf.file import FileField, FileAllowed
+from wtforms import StringField, PasswordField, BooleanField, SubmitField, SelectField, TextAreaField
+from wtforms.validators import DataRequired, Email, Length, EqualTo, ValidationError, Optional
 from models.user_model import User
 
 class LoginForm(FlaskForm):
@@ -25,6 +26,22 @@ class RegistrationForm(FlaskForm):
         user = User.query.filter_by(email=email.data).first()
         if user:
             raise ValidationError('Email already registered. Please use a different one.')
+
+class ProfileForm(FlaskForm):
+    username = StringField('Username', validators=[DataRequired(), Length(min=4, max=20)])
+    email = StringField('Email', validators=[DataRequired(), Email()])
+    bio = TextAreaField('Bio', validators=[Optional(), Length(max=500)])
+    profile_picture = FileField('Profile Picture', validators=[
+        FileAllowed(['jpg', 'png', 'jpeg', 'gif'], 'Images only!')
+    ])
+    submit = SubmitField('Update Profile')
+
+    def __init__(self, *args, **kwargs):
+        super(ProfileForm, self).__init__(*args, **kwargs)
+        if kwargs.get('obj'):
+            self.username.data = kwargs['obj'].username
+            self.email.data = kwargs['obj'].email
+            self.bio.data = kwargs['obj'].bio
 
 class SearchForm(FlaskForm):
     search_query = StringField('Search', validators=[DataRequired()])

@@ -1,4 +1,4 @@
-from flask import Blueprint, request, render_template, session, redirect, url_for, flash
+from flask import Blueprint, request, render_template, session, redirect, url_for, flash, jsonify
 from flask_login import login_required, current_user
 from models.book_model import Book, db
 from models.music_model import Music
@@ -9,6 +9,7 @@ from models.music import search_music, save_music
 from models.user_media_model import UserMedia
 from models.social_model import Follow, Like, Notification, List, Comment
 from models.user_model import User
+from datetime import datetime
 
 media_routes = Blueprint('media_routes', __name__)
 
@@ -192,8 +193,13 @@ def media(media_type, media_id):
         **{f"{media_type}_id": media_id}
     ).all()
     
+    # Add user information to the queries
+    for entry in planned_by + consumed_by:
+        entry.user = User.query.get(entry.user_id)
+    
     return render_template("media.html", 
                          media=media,
+                         media_type=media_type,
                          user_media=user_media,
                          planned_by=planned_by,
                          consumed_by=consumed_by)
@@ -278,3 +284,175 @@ def add_to_planner():
 def add_media():
     # ... existing code ...
     return redirect(url_for('main_routes.home'))
+
+@media_routes.route("/media/save_external", methods=["POST"])
+@login_required
+def save_external_media():
+    """Save external API media to database and redirect to media detail page"""
+    data = request.get_json()
+    media_type = data.get('media_type')
+    media_data = data.get('media_data')
+    
+    if not media_type or not media_data:
+        return jsonify({'success': False, 'message': 'Missing required data'}), 400
+    
+    try:
+        if media_type == 'book':
+            # Check if book already exists
+            existing_book = Book.query.filter_by(
+                title=media_data['title'], 
+                author=media_data['author']
+            ).first()
+            
+            if existing_book:
+                book = existing_book
+            else:
+                # Create new book
+                book = Book(
+                    title=media_data['title'],
+                    author=media_data['author'],
+                    genre=media_data.get('genre', 'Unknown'),
+                    year=media_data.get('year'),
+                    language=media_data.get('language', 'Unknown'),
+                    publisher=media_data.get('publisher'),
+                    country=media_data.get('country'),
+                    description=media_data.get('reviews'),
+                    coverart=media_data.get('coverart')
+                )
+                db.session.add(book)
+                db.session.flush()  # Get the book_id
+            
+            # Create user media entry
+            user_media = UserMedia(
+                user_id=current_user.user_id,
+                book_id=book.book_id,
+                media_type='book',
+                done=True,
+                date_consumed=datetime.now()
+            )
+            db.session.add(user_media)
+            
+        elif media_type == 'music':
+            # Check if music already exists
+            existing_music = Music.query.filter_by(
+                title=media_data['title'], 
+                artist=media_data['artist']
+            ).first()
+            
+            if existing_music:
+                music = existing_music
+            else:
+                # Create new music
+                music = Music(
+                    title=media_data['title'],
+                    artist=media_data['artist'],
+                    genre=media_data.get('genre', 'Unknown'),
+                    year=media_data.get('year'),
+                    language=media_data.get('language', 'Unknown'),
+                    label=media_data.get('label'),
+                    country=media_data.get('country'),
+                    reviews=media_data.get('reviews'),
+                    coverart=media_data.get('coverart')
+                )
+                db.session.add(music)
+                db.session.flush()  # Get the music_id
+            
+            # Create user media entry
+            user_media = UserMedia(
+                user_id=current_user.user_id,
+                music_id=music.music_id,
+                media_type='music',
+                done=True,
+                date_consumed=datetime.now()
+            )
+            db.session.add(user_media)
+            
+        elif media_type == 'cinema':
+            # Check if cinema already exists
+            existing_cinema = Cinema.query.filter_by(
+                title=media_data['title'], 
+                director=media_data['director']
+            ).first()
+            
+            if existing_cinema:
+                cinema = existing_cinema
+            else:
+                # Create new cinema
+                cinema = Cinema(
+                    title=media_data['title'],
+                    director=media_data['director'],
+                    genre=media_data.get('genre', 'Unknown'),
+                    year=media_data.get('year'),
+                    language=media_data.get('language', 'Unknown'),
+                    type=media_data.get('type', 'movie'),
+                    country=media_data.get('country'),
+                    reviews=media_data.get('reviews'),
+                    coverart=media_data.get('coverart')
+                )
+                db.session.add(cinema)
+                db.session.flush()  # Get the cinema_id
+            
+            # Create user media entry
+            user_media = UserMedia(
+                user_id=current_user.user_id,
+                cinema_id=cinema.cinema_id,
+                media_type='cinema',
+                done=True,
+                date_consumed=datetime.now()
+            )
+            db.session.add(user_media)
+        
+        db.session.commit()
+        
+        # Return success with redirect URL
+        if media_type == 'book':
+            redirect_url = url_for('media_routes.media', media_type='book', media_id=book.book_id)
+        elif media_type == 'music':
+            redirect_url = url_for('media_routes.media', media_type='music', media_id=music.music_id)
+        elif media_type == 'cinema':
+            redirect_url = url_for('media_routes.media', media_type='cinema', media_id=cinema.cinema_id)
+        
+        return jsonify({
+            'success': True, 
+            'message': f'{media_type.title()} saved to library!',
+            'redirect_url': redirect_url
+        })
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+@media_routes.route("/media/add_to_library", methods=["POST"])
+@login_required
+def add_to_library():
+    media_type = request.form.get("media_type")
+    media_id = request.form.get("media_id")
+    rating = request.form.get("rating")
+    date_consumed = request.form.get("date_consumed")
+
+    if not media_type or not media_id:
+        flash("Invalid request.", "danger")
+        return redirect(url_for("main_routes.home"))
+
+    # Check if it's already in the library
+    user_media = UserMedia.query.filter_by(
+        user_id=current_user.user_id,
+        media_type=media_type,
+        **{f"{media_type}_id": media_id}
+    ).first()
+
+    if user_media:
+        flash("This item is already in your library.", "warning")
+    else:
+        new_user_media = UserMedia(
+            user_id=current_user.user_id,
+            media_type=media_type,
+            rating=rating if rating else None,
+            date_consumed=datetime.strptime(date_consumed, '%Y-%m-%d').date() if date_consumed else None,
+            **{f"{media_type}_id": media_id}
+        )
+        db.session.add(new_user_media)
+        db.session.commit()
+        flash("Successfully added to your library!", "success")
+
+    return redirect(url_for("media_routes.media", media_type=media_type, media_id=media_id))

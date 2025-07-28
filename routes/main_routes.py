@@ -14,6 +14,10 @@ from forms.forms import LoginForm, RegistrationForm, SearchForm
 
 main_routes = Blueprint('main_routes', __name__)
 
+def allowed_file(filename):
+    return '.' in filename and \
+           filename.rsplit('.', 1)[1].lower() in {'png', 'jpg', 'jpeg', 'gif'}
+
 @main_routes.route('/')
 @login_required
 def home():
@@ -61,29 +65,62 @@ def profile(username):
 @login_required
 def settings():
     if request.method == 'POST':
-        # Handle settings update
+        # Handle basic information
+        current_user.username = request.form.get('username')
         current_user.email = request.form.get('email')
         current_user.bio = request.form.get('bio')
         
-        if request.form.get('new_password'):
-            current_user.set_password(request.form.get('new_password'))
+        # Handle password change
+        new_password = request.form.get('new_password')
+        confirm_password = request.form.get('confirm_password')
+        if new_password:
+            if new_password == confirm_password:
+                from flask_bcrypt import Bcrypt
+                bcrypt = Bcrypt()
+                current_user.password_hash = bcrypt.generate_password_hash(new_password).decode('utf-8')
+            else:
+                flash('Passwords do not match!', 'error')
+                return redirect(url_for('main_routes.settings'))
         
         # Handle profile picture upload
         if 'profile_picture' in request.files:
             file = request.files['profile_picture']
-            if file and file.filename:
-                # Save the file and update the profile picture path
-                filename = secure_filename(file.filename)
-                file.save(os.path.join(current_app.config['UPLOAD_FOLDER'], filename))
-                current_user.profile_picture = filename
+            if file and file.filename != '':
+                if allowed_file(file.filename):
+                    # Create profile_pictures directory if it doesn't exist
+                    profile_pictures_dir = os.path.join(current_app.root_path, 'static', 'profile_pictures')
+                    os.makedirs(profile_pictures_dir, exist_ok=True)
+                    
+                    # Remove old profile picture if it exists and is not the default
+                    if current_user.profile_picture and current_user.profile_picture != 'defaults/user.png':
+                        old_path = os.path.join(current_app.root_path, 'static', current_user.profile_picture)
+                        if os.path.exists(old_path):
+                            os.remove(old_path)
+                    
+                    # Save new profile picture with secure filename
+                    filename = secure_filename(file.filename)
+                    # Add timestamp to avoid filename conflicts
+                    name, ext = os.path.splitext(filename)
+                    filename = f"{name}_{int(datetime.now().timestamp())}{ext}"
+                    
+                    file_path = os.path.join(profile_pictures_dir, filename)
+                    file.save(file_path)
+                    current_user.profile_picture = f'profile_pictures/{filename}'
+                else:
+                    flash('Invalid file type. Please upload an image file (png, jpg, jpeg, gif).', 'error')
+                    return redirect(url_for('main_routes.settings'))
+        
+        # Handle profile picture deletion
+        if request.form.get('delete_picture'):
+            if current_user.profile_picture and current_user.profile_picture != 'defaults/user.png':
+                old_path = os.path.join(current_app.root_path, 'static', current_user.profile_picture)
+                if os.path.exists(old_path):
+                    os.remove(old_path)
+                current_user.profile_picture = 'defaults/user.png'
         
         # Handle notification settings
         current_user.email_notifications = 'email_notifications' in request.form
-        current_user.activity_notifications = 'activity_notifications' in request.form
-        
-        # Handle privacy settings
-        current_user.private_profile = 'private_profile' in request.form
-        current_user.show_activity = 'show_activity' in request.form
+        current_user.notifications_enabled = 'activity_notifications' in request.form
         
         db.session.commit()
         flash('Settings updated successfully!', 'success')

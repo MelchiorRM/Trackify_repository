@@ -11,32 +11,32 @@
                         <h2 class="card-title">{{ media.title }}</h2>
                         <div class="btn-group">
                             <!-- Post Media Button -->
-                            <a href="{{ url_for('post_routes.create_post', media_type=media.media_type, media_id=media.media_id) }}" 
+                            <a href="{{ url_for('post_routes.create_post', media_type=media_type, media_id=media.id) }}" 
                                class="btn btn-info">
                                 <i class="fas fa-share"></i> Post Media
                             </a>
                             
                             <!-- Post to Diary Button -->
-                            <button class="btn btn-secondary" onclick="postToDiary('{{ media.media_id }}', '{{ media.media_type }}', '{{ media.title }}')">
+                            <button class="btn btn-secondary" onclick="postToDiary('{{ media.id }}', '{{ media_type }}', '{{ media.title }}')">
                                 <i class="fas fa-book-open"></i> Post to Diary
                             </button>
                             
-                            {% if media in current_user.planned_media %}
-                                <button class="btn btn-warning" onclick="removeFromPlanner('{{ media.media_id }}')">
+                            {% if user_media and user_media.planned %}
+                                <button class="btn btn-warning" onclick="removeFromPlanner('{{ media.id }}')">
                                     <i class="fas fa-calendar-minus"></i> Remove from Planner
                                 </button>
                             {% else %}
-                                <button class="btn btn-primary" onclick="addToPlanner('{{ media.media_id }}')">
+                                <button class="btn btn-primary" onclick="addToPlanner('{{ media.id }}')">
                                     <i class="fas fa-calendar-plus"></i> Add to Planner
                                 </button>
                             {% endif %}
                             
-                            {% if media in current_user.consumed_media %}
+                            {% if user_media and user_media.done %}
                                 <button class="btn btn-success" disabled>
                                     <i class="fas fa-check"></i> Consumed
                                 </button>
                             {% else %}
-                                <button class="btn btn-success" onclick="markAsConsumed('{{ media.media_id }}')">
+                                <button class="btn btn-success" onclick="markAsConsumed('{{ media.id }}')">
                                     <i class="fas fa-check"></i> Mark as Consumed
                                 </button>
                             {% endif %}
@@ -44,22 +44,57 @@
                     </div>
                     
                     <div class="media-details mt-3">
-                        {% if media.media_type == 'book' %}
+                        {% if media_type == 'book' %}
                             <p><strong>Author:</strong> {{ media.author }}</p>
                             <p><strong>Genre:</strong> {{ media.genre }}</p>
-                            <p><strong>Published:</strong> {{ media.publication_date }}</p>
-                        {% elif media.media_type == 'cinema' %}
+                            <p><strong>Year:</strong> {{ media.year }}</p>
+                        {% elif media_type == 'cinema' %}
                             <p><strong>Director:</strong> {{ media.director }}</p>
                             <p><strong>Genre:</strong> {{ media.genre }}</p>
-                            <p><strong>Release Year:</strong> {{ media.release_year }}</p>
-                        {% elif media.media_type == 'music' %}
+                            <p><strong>Year:</strong> {{ media.year }}</p>
+                        {% elif media_type == 'music' %}
                             <p><strong>Artist:</strong> {{ media.artist }}</p>
                             <p><strong>Genre:</strong> {{ media.genre }}</p>
-                            <p><strong>Release Year:</strong> {{ media.release_year }}</p>
+                            <p><strong>Year:</strong> {{ media.year }}</p>
                         {% endif %}
                     </div>
                 </div>
             </div>
+
+            {% if not user_media %}
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h4>Add to Your Library</h4>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('media_routes.add_to_library') }}">
+                        <input type="hidden" name="media_type" value="{{ media_type }}">
+                        <input type="hidden" name="media_id" value="{{ media.id }}">
+                        
+                        <!-- Rating Section -->
+                        <div class="mb-3">
+                            <label class="form-label">Rating (optional)</label>
+                            <div class="rating-input">
+                                {% for i in range(1, 6) %}
+                                <input type="radio" name="rating" value="{{ i }}" id="star_{{ i }}" class="rating-radio">
+                                <label for="star_{{ i }}" class="rating-star">★</label>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        
+                        <!-- Date Consumed -->
+                        <div class="mb-3">
+                            <label for="date_consumed" class="form-label">Date Consumed (optional)</label>
+                            <input type="date" class="form-control" id="date_consumed" name="date_consumed">
+                        </div>
+                        
+                        <button type="submit" class="btn btn-success btn-block w-100">
+                            <i class="fas fa-plus"></i> Add to Library
+                        </button>
+                    </form>
+                </div>
+            </div>
+            {% endif %}
 
             <!-- Network Activity -->
             <div class="card mt-4">
@@ -71,10 +106,10 @@
                         <div class="col-md-6">
                             <h5>Planned by</h5>
                             <ul class="list-group">
-                                {% for user in media.planned_by %}
+                                {% for user_media_entry in planned_by %}
                                     <li class="list-group-item d-flex justify-content-between align-items-center">
-                                        {{ user.username }}
-                                        <span class="badge bg-primary rounded-pill">{{ user.planned_date }}</span>
+                                        {{ user_media_entry.user.username if user_media_entry.user else 'Unknown User' }}
+                                        <span class="badge bg-primary rounded-pill">{{ user_media_entry.created_at.strftime('%Y-%m-%d') if user_media_entry.created_at else 'Unknown Date' }}</span>
                                     </li>
                                 {% endfor %}
                             </ul>
@@ -82,10 +117,10 @@
                         <div class="col-md-6">
                             <h5>Consumed by</h5>
                             <ul class="list-group">
-                                {% for user in media.consumed_by %}
+                                {% for user_media_entry in consumed_by %}
                                     <li class="list-group-item d-flex justify-content-between align-items-center">
-                                        {{ user.username }}
-                                        <span class="badge bg-success rounded-pill">{{ user.consumed_date }}</span>
+                                        {{ user_media_entry.user.username if user_media_entry.user else 'Unknown User' }}
+                                        <span class="badge bg-success rounded-pill">{{ user_media_entry.date_consumed.strftime('%Y-%m-%d') if user_media_entry.date_consumed else 'Unknown Date' }}</span>
                                     </li>
                                 {% endfor %}
                             </ul>
@@ -95,7 +130,7 @@
             </div>
 
             <!-- Diary Entries -->
-            {% if media in current_user.consumed_media %}
+            {% if user_media and user_media.done %}
             <div class="card mt-4">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h4>Your Diary</h4>
@@ -104,22 +139,22 @@
                     </button>
                 </div>
                 <div class="card-body">
-                    {% for entry in media.diary_entries %}
+                    {% if user_media.review %}
                     <div class="diary-entry mb-3">
                         <div class="d-flex justify-content-between">
-                            <small class="text-muted">{{ entry.created_at.strftime('%Y-%m-%d %H:%M') }}</small>
+                            <small class="text-muted">{{ user_media.date_consumed.strftime('%Y-%m-%d %H:%M') if user_media.date_consumed else 'Unknown Date' }}</small>
                             <div class="btn-group">
-                                <button class="btn btn-sm btn-outline-primary" onclick="editDiaryEntry('{{ entry.entry_id }}')">
+                                <button class="btn btn-sm btn-outline-primary" onclick="editDiaryEntry('{{ user_media.user_media_id }}')">
                                     <i class="fas fa-edit"></i>
                                 </button>
-                                <button class="btn btn-sm btn-outline-danger" onclick="deleteDiaryEntry('{{ entry.entry_id }}')">
+                                <button class="btn btn-sm btn-outline-danger" onclick="deleteDiaryEntry('{{ user_media.user_media_id }}')">
                                     <i class="fas fa-trash"></i>
                                 </button>
                             </div>
                         </div>
-                        <p class="mt-2">{{ entry.content }}</p>
+                        <p class="mt-2">{{ user_media.review }}</p>
                     </div>
-                    {% endfor %}
+                    {% endif %}
                 </div>
             </div>
             {% endif %}
@@ -132,9 +167,15 @@
                     <h4>Quick Stats</h4>
                 </div>
                 <div class="card-body">
-                    <p><strong>Planned by:</strong> {{ media.planned_by|length }} users</p>
-                    <p><strong>Consumed by:</strong> {{ media.consumed_by|length }} users</p>
-                    <p><strong>Average Rating:</strong> {{ media.average_rating|round(1) }}/5</p>
+                    <p><strong>Planned by:</strong> {{ planned_by|length }} users</p>
+                    <p><strong>Consumed by:</strong> {{ consumed_by|length }} users</p>
+                    <p><strong>Average Rating:</strong> 
+                        {% if user_media and user_media.rating %}
+                            {{ user_media.rating|round(1) }}/5
+                        {% else %}
+                            No ratings yet
+                        {% endif %}
+                    </p>
                 </div>
             </div>
         </div>
@@ -188,7 +229,7 @@ function saveDiaryEntry() {
             'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-            media_id: '{{ media.media_id }}',
+            media_id: '{{ media.id }}',
             content: content
         })
     })

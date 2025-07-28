@@ -11,10 +11,16 @@ from flask_bcrypt import Bcrypt
 from config import Config
 import os
 from werkzeug.security import generate_password_hash, check_password_hash
-from forms.forms import LoginForm, RegistrationForm, SearchForm
+from werkzeug.utils import secure_filename
+from forms.forms import LoginForm, RegistrationForm, SearchForm, ProfileForm
+from datetime import datetime
 
 user_routes = Blueprint('user_routes', __name__)
 bcrypt = Bcrypt()
+
+def allowed_file(filename):
+    return '.' in filename and \
+           filename.rsplit('.', 1)[1].lower() in {'png', 'jpg', 'jpeg', 'gif'}
 
 @user_routes.route("/register", methods=["GET", "POST"])
 def register():
@@ -30,8 +36,7 @@ def register():
         user = User(
             username=form.username.data,
             email=form.email.data,
-            password=form.password.data,
-            profile_picture='defaults/user.png'
+            password_hash=bcrypt.generate_password_hash(form.password.data).decode('utf-8')
         )
         db.session.add(user)
         db.session.commit()
@@ -71,23 +76,44 @@ def profile():
         current_user.email = request.form["email"]
         password = request.form["password"]
         if password:
-            current_user.password = password
+            current_user.password_hash = bcrypt.generate_password_hash(password).decode('utf-8')
+        
+        # Handle profile picture upload
         if 'profile_picture' in request.files:
             profile_picture = request.files['profile_picture']
             if profile_picture and profile_picture.filename != '':
-                if current_user.profile_picture != 'defaults/user.png':
-                    old_path = os.path.join('static', current_user.profile_picture)
-                    if os.path.exists(old_path):
-                        os.remove(old_path)
-                profile_picture_path = os.path.join('static/profile_pictures', profile_picture.filename)
-                profile_picture.save(profile_picture_path)
-                current_user.profile_picture = profile_picture_path
+                if allowed_file(profile_picture.filename):
+                    # Create profile_pictures directory if it doesn't exist
+                    profile_pictures_dir = os.path.join(current_app.root_path, 'static', 'profile_pictures')
+                    os.makedirs(profile_pictures_dir, exist_ok=True)
+                    
+                    # Remove old profile picture if it exists and is not the default
+                    if current_user.profile_picture and current_user.profile_picture != 'defaults/user.png':
+                        old_path = os.path.join(current_app.root_path, 'static', current_user.profile_picture)
+                        if os.path.exists(old_path):
+                            os.remove(old_path)
+                    
+                    # Save new profile picture with secure filename
+                    filename = secure_filename(profile_picture.filename)
+                    # Add timestamp to avoid filename conflicts
+                    name, ext = os.path.splitext(filename)
+                    filename = f"{name}_{int(datetime.now().timestamp())}{ext}"
+                    
+                    profile_picture_path = os.path.join(profile_pictures_dir, filename)
+                    profile_picture.save(profile_picture_path)
+                    current_user.profile_picture = f'profile_pictures/{filename}'
+                else:
+                    flash('Invalid file type. Please upload an image file (png, jpg, jpeg, gif).', 'error')
+                    return redirect(url_for("user_routes.profile"))
+
+        # Handle profile picture deletion
         if request.form.get("delete_picture"):
-            if current_user.profile_picture != 'defaults/user.png':
-                old_path = os.path.join('static', current_user.profile_picture)
+            if current_user.profile_picture and current_user.profile_picture != 'defaults/user.png':
+                old_path = os.path.join(current_app.root_path, 'static', current_user.profile_picture)
                 if os.path.exists(old_path):
                     os.remove(old_path)
                 current_user.profile_picture = 'defaults/user.png'
+        
         db.session.commit()
         flash("Profile updated successfully!", "success")
         return redirect(url_for("user_routes.profile"))
@@ -209,10 +235,36 @@ def recommendations():
 def edit_profile():
     form = ProfileForm(obj=current_user)
     if form.validate_on_submit():
+        current_user.username = form.username.data
+        current_user.email = form.email.data
         current_user.bio = form.bio.data
+        
+        # Handle profile picture upload
         if form.profile_picture.data:
-            # Handle profile picture upload
-            pass
+            if allowed_file(form.profile_picture.data.filename):
+                # Create profile_pictures directory if it doesn't exist
+                profile_pictures_dir = os.path.join(current_app.root_path, 'static', 'profile_pictures')
+                os.makedirs(profile_pictures_dir, exist_ok=True)
+                
+                # Remove old profile picture if it exists and is not the default
+                if current_user.profile_picture and current_user.profile_picture != 'defaults/user.png':
+                    old_path = os.path.join(current_app.root_path, 'static', current_user.profile_picture)
+                    if os.path.exists(old_path):
+                        os.remove(old_path)
+                
+                # Save new profile picture with secure filename
+                filename = secure_filename(form.profile_picture.data.filename)
+                # Add timestamp to avoid filename conflicts
+                name, ext = os.path.splitext(filename)
+                filename = f"{name}_{int(datetime.now().timestamp())}{ext}"
+                
+                profile_picture_path = os.path.join(profile_pictures_dir, filename)
+                form.profile_picture.data.save(profile_picture_path)
+                current_user.profile_picture = f'profile_pictures/{filename}'
+            else:
+                flash('Invalid file type. Please upload an image file (png, jpg, jpeg, gif).', 'error')
+                return render_template('edit_profile.html', form=form)
+        
         db.session.commit()
         flash('Profile updated successfully!', 'success')
         return redirect(url_for('main_routes.profile', username=current_user.username))

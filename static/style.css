@@ -201,3 +201,27 @@ ul.list-group li {
     font-weight: 600;
     border-radius: 6px;
 }
+
+.rating-input {
+    display: flex;
+    flex-direction: row-reverse;
+    justify-content: center;
+    gap: 5px;
+}
+
+.rating-radio {
+    display: none;
+}
+
+.rating-star {
+    font-size: 1.5rem;
+    color: #ddd;
+    cursor: pointer;
+    transition: color 0.2s;
+}
+
+.rating-star:hover,
+.rating-star:hover ~ .rating-star,
+.rating-radio:checked ~ .rating-star {
+    color: #ffc107;
+}

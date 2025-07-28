@@ -41,11 +41,12 @@ class User(db.Model, UserMixin):
         cascade='all, delete-orphan'
     )
 
-    def __init__(self, username, password, email, profile_picture, bio=None):
+    def __init__(self, username, password, email, profile_picture=None, bio=None):
         self.username = username
         self.password_hash = bcrypt.generate_password_hash(password).decode('utf-8')
         self.email = email
-        self.profile_picture = profile_picture
+        # Always set a default profile picture if none provided
+        self.profile_picture = profile_picture if profile_picture else 'defaults/user.png'
         self.bio = bio if bio else ''
         
     def get_id(self):
@@ -65,3 +66,10 @@ class User(db.Model, UserMixin):
         if follow:
             db.session.delete(follow)
             db.session.commit()
+    
+    @property
+    def profile_picture_url(self):
+        """Return the profile picture URL, ensuring default is used if none set"""
+        if not self.profile_picture or self.profile_picture == '':
+            return 'defaults/user.png'
+        return self.profile_picture

@@ -36,10 +36,11 @@
                                     <div class="card h-100">
                                         <div class="card-body">
                                             <div class="d-flex align-items-center mb-3">
-                                                <img src="{{ follower.profile_picture or url_for('static', filename='default_profile.png') }}" 
-                                                     class="rounded-circle me-3" style="width: 50px; height: 50px; object-fit: cover;">
-                                                <div>
-                                                    <h6 class="mb-0">{{ follower.username }}</h6>
+                                                <a href="{{ url_for('main_routes.profile', username=follower.username) }}">
+                                                    <img src="{{ url_for('static', filename=follower.profile_picture) }}" alt="{{ follower.username }}" class="rounded-circle" width="50" height="50">
+                                                </a>
+                                                <div class="ms-3">
+                                                    <a href="{{ url_for('main_routes.profile', username=follower.username) }}" class="text-decoration-none text-dark fw-bold">{{ follower.username }}</a>
                                                     <small class="text-muted">{{ follower.followers.count() }} followers</small>
                                                 </div>
                                             </div>
@@ -84,10 +85,11 @@
                                     <div class="card h-100">
                                         <div class="card-body">
                                             <div class="d-flex align-items-center mb-3">
-                                                <img src="{{ followed.profile_picture or url_for('static', filename='default_profile.png') }}" 
-                                                     class="rounded-circle me-3" style="width: 50px; height: 50px; object-fit: cover;">
-                                                <div>
-                                                    <h6 class="mb-0">{{ followed.username }}</h6>
+                                                <a href="{{ url_for('main_routes.profile', username=followed.username) }}">
+                                                    <img src="{{ url_for('static', filename=followed.profile_picture) }}" alt="{{ followed.username }}" class="rounded-circle" width="50" height="50">
+                                                </a>
+                                                <div class="ms-3">
+                                                    <a href="{{ url_for('main_routes.profile', username=followed.username) }}" class="text-decoration-none text-dark fw-bold">{{ followed.username }}</a>
                                                     <small class="text-muted">{{ followed.followers.count() }} followers</small>
                                                 </div>
                                             </div>
@@ -133,10 +135,11 @@
                                     <div class="card h-100">
                                         <div class="card-body">
                                             <div class="d-flex align-items-center mb-3">
-                                                <img src="{{ user.profile_picture or url_for('static', filename='default_profile.png') }}" 
-                                                     class="rounded-circle me-3" style="width: 50px; height: 50px; object-fit: cover;">
-                                                <div>
-                                                    <h6 class="mb-0">{{ user.username }}</h6>
+                                                <a href="{{ url_for('main_routes.profile', username=user.username) }}">
+                                                    <img src="{{ url_for('static', filename=user.profile_picture) }}" alt="{{ user.username }}" class="rounded-circle" width="50" height="50">
+                                                </a>
+                                                <div class="ms-3">
+                                                    <a href="{{ url_for('main_routes.profile', username=user.username) }}" class="text-decoration-none text-dark fw-bold">{{ user.username }}</a>
                                                     <small class="text-muted">{{ user.followers.count() }} followers</small>
                                                 </div>
                                             </div>

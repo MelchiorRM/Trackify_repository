@@ -17,51 +17,50 @@
     <div class="row">
         {% for item in music %}
         <div class="col-md-6 col-lg-4 mb-4">
-            <div class="card h-100 shadow-sm">
-                {% if item.coverart %}
-                <img src="{{ item.coverart }}" class="card-img-top" alt="{{ item.title }}">
-                {% endif %}
-                <div class="card-body">
-                    <h5 class="card-title">{{ item.title }}</h5>
-                    <p class="card-text">Artist: {{ item.artist }}</p>
-                    
-                    <!-- Add Music Form -->
-                    <form method="POST" action="{{ url_for('media_routes.music') }}" class="mt-3">
-                        <input type="hidden" name="title" value="{{ item.title }}">
-                        <input type="hidden" name="artist" value="{{ item.artist }}">
-                        <input type="hidden" name="genre" value="{{ item.genre or '' }}">
-                        <input type="hidden" name="year" value="{{ item.year or '' }}">
-                        <input type="hidden" name="language" value="{{ item.language or '' }}">
-                        <input type="hidden" name="label" value="{{ item.label or '' }}">
-                        <input type="hidden" name="country" value="{{ item.country or '' }}">
-                        <input type="hidden" name="coverart" value="{{ item.coverart or '' }}">
-                        
-                        <!-- Rating Section -->
-                        <div class="mb-3">
-                            <label class="form-label">Rating (optional)</label>
-                            <div class="rating-input">
-                                {% for i in range(1, 6) %}
-                                <input type="radio" name="rating" value="{{ i }}" id="star{{ loop.index }}_{{ i }}" class="rating-radio">
-                                <label for="star{{ loop.index }}_{{ i }}" class="rating-star">★</label>
-                                {% endfor %}
-                            </div>
+            {% set music_id = item.music_id if item.music_id is defined else (item['music_id'] if 'music_id' in item else None) %}
+            {% if music_id %}
+                <!-- Local database music - link to media detail page -->
+                <a href="{{ url_for('media_routes.media', media_type='music', media_id=music_id) }}" class="text-decoration-none">
+                    <div class="card h-100 shadow-sm hover-card">
+                        {% if item.coverart %}
+                        <img src="{{ item.coverart }}" class="card-img-top" alt="{{ item.title }}">
+                        {% endif %}
+                        <div class="card-body">
+                            <h5 class="card-title text-dark">{{ item.title }}</h5>
+                            <p class="card-text text-muted">Artist: {{ item.artist }}</p>
+                            {% if item.genre %}
+                            <p class="card-text text-muted">Genre: {{ item.genre }}</p>
+                            {% endif %}
+                            {% if item.year %}
+                            <p class="card-text text-muted">Year: {{ item.year }}</p>
+                            {% endif %}
                         </div>
-                        
-                        <!-- Date Consumed -->
-                        <div class="mb-3">
-                            <label for="date_consumed_{{ loop.index }}" class="form-label">Date Consumed (optional)</label>
-                            <input type="date" class="form-control" id="date_consumed_{{ loop.index }}" name="date_consumed">
+                        <div class="card-footer bg-transparent">
+                            <span class="btn btn-primary btn-block">View Details</span>
                         </div>
-                        
-                        <button type="submit" class="btn btn-success btn-block w-100">
-                            <i class="fas fa-plus"></i> Add to Library
-                        </button>
-                    </form>
+                    </div>
+                </a>
+            {% else %}
+                <!-- External API music - show details in modal or add to library -->
+                <div class="card h-100 shadow-sm hover-card" data-music-title="{{ item.title|e }}" data-music-artist="{{ item.artist|e }}" data-music-genre="{{ item.genre|e if item.genre else '' }}" data-music-coverart="{{ item.coverart|e if item.coverart else '' }}" data-music-year="{{ item.year|e if item.year else '' }}" data-music-description="{{ item.reviews|e if item.reviews else '' }}" onclick="showMusicDetailsFromData(this)">
+                    {% if item.coverart %}
+                    <img src="{{ item.coverart }}" class="card-img-top" alt="{{ item.title }}">
+                    {% endif %}
+                    <div class="card-body">
+                        <h5 class="card-title text-dark">{{ item.title }}</h5>
+                        <p class="card-text text-muted">Artist: {{ item.artist }}</p>
+                        {% if item.genre %}
+                        <p class="card-text text-muted">Genre: {{ item.genre }}</p>
+                        {% endif %}
+                        {% if item.year %}
+                        <p class="card-text text-muted">Year: {{ item.year }}</p>
+                        {% endif %}
+                    </div>
+                    <div class="card-footer bg-transparent">
+                        <span class="btn btn-outline-primary btn-block">View Details</span>
+                    </div>
                 </div>
-                <div class="card-footer">
-                    <a href="{{ url_for('media_routes.media', media_type='music', media_id=item.get('music_id', 0)) }}" class="btn btn-primary btn-block">View Details</a>
-                </div>
-            </div>
+            {% endif %}
         </div>
         {% endfor %}
     </div>
@@ -81,32 +80,114 @@
     </div>
 </div>
 
+<!-- Music Details Modal -->
+<div class="modal fade" id="musicDetailsModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="musicModalTitle"></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-4">
+                        <img id="musicModalCover" src="" alt="Music Cover" class="img-fluid rounded">
+                    </div>
+                    <div class="col-md-8">
+                        <h6>Artist: <span id="musicModalArtist"></span></h6>
+                        <h6>Genre: <span id="musicModalGenre"></span></h6>
+                        <h6>Year: <span id="musicModalYear"></span></h6>
+                        <div class="mt-3">
+                            <h6>Description:</h6>
+                            <p id="musicModalDescription"></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" onclick="addMusicToLibrary()">Add to Library</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <style>
-.rating-input {
-    display: flex;
-    flex-direction: row-reverse;
-    gap: 5px;
-}
-
-.rating-radio {
-    display: none;
-}
-
-.rating-star {
-    font-size: 1.5rem;
-    color: #ddd;
+.hover-card {
+    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
     cursor: pointer;
-    transition: color 0.2s;
 }
 
-.rating-star:hover,
-.rating-star:hover ~ .rating-star,
-.rating-radio:checked ~ .rating-star {
-    color: #ffc107;
+.hover-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1) !important;
 }
 
-.rating-radio:checked ~ .rating-star {
-    color: #ffc107;
+.card-footer .btn {
+    pointer-events: none;
 }
 </style>
+
+<script>
+let currentMusicData = {};
+
+function showMusicDetailsFromData(element) {
+    const title = element.getAttribute('data-music-title');
+    const artist = element.getAttribute('data-music-artist');
+    const genre = element.getAttribute('data-music-genre');
+    const coverart = element.getAttribute('data-music-coverart');
+    const year = element.getAttribute('data-music-year');
+    const description = element.getAttribute('data-music-description');
+    
+    currentMusicData = { title, artist, genre, coverart, year, description };
+    
+    document.getElementById('musicModalTitle').textContent = title;
+    document.getElementById('musicModalArtist').textContent = artist;
+    document.getElementById('musicModalGenre').textContent = genre || 'Unknown';
+    document.getElementById('musicModalYear').textContent = year || 'Unknown';
+    document.getElementById('musicModalDescription').textContent = description || 'No description available.';
+    
+    const coverImg = document.getElementById('musicModalCover');
+    if (coverart) {
+        coverImg.src = coverart;
+        coverImg.style.display = 'block';
+    } else {
+        coverImg.style.display = 'none';
+    }
+    
+    const modal = new bootstrap.Modal(document.getElementById('musicDetailsModal'));
+    modal.show();
+}
+
+function addMusicToLibrary() {
+    // Save the music data to the database and redirect to media detail page
+    fetch('/media/save_external', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            media_type: 'music',
+            media_data: currentMusicData
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Show success message and redirect to media detail page
+            alert(data.message);
+            window.location.href = data.redirect_url;
+        } else {
+            alert('Error: ' + data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Network error occurred');
+    });
+    
+    const modal = bootstrap.Modal.getInstance(document.getElementById('musicDetailsModal'));
+    modal.hide();
+}
+</script>
 {% endblock %}

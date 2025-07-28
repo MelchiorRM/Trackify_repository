@@ -1,8 +1,8 @@
 .venv/
 .vscode/
 */__pycache__/
-#*.sql
+*.sql
 ./__pycache__/
 __pycache__/
-./flask_session/
+flask_session/
 config.py

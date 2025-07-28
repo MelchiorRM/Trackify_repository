@@ -455,4 +455,4 @@ def get_available_moods():
     return jsonify({
         'success': True,
         'moods': moods
-    }) 
+    })

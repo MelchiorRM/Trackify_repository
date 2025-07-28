@@ -13,14 +13,17 @@
         <!-- Header -->
         <div class="conversation-header">
             <div class="conversation-user">
-                <img src="{{ other_user.profile_picture or url_for('static', filename='defaults/user.png') }}" 
-                     class="conversation-avatar" alt="{{ other_user.username }}">
-                <div class="conversation-info">
-                    <h6>{{ other_user.username }}</h6>
-                    <div class="conversation-status">
-                        <span class="status-dot"></span>
-                        <span id="userStatus">Online</span>
+                <div class="d-flex align-items-center">
+                    <a href="{{ url_for('main_routes.profile', username=other_user.username) }}">
+                        <img src="{{ url_for('static', filename=other_user.profile_picture) }}" alt="Profile picture of {{ other_user.username }}" class="rounded-circle" width="50" height="50">
+                    </a>
+                    <div class="ms-3">
+                        <h5 class="mb-0">{{ other_user.username }}</h5>
                     </div>
+                </div>
+                <div class="conversation-status">
+                    <span class="status-dot"></span>
+                    <span id="userStatus">Online</span>
                 </div>
             </div>
             <div class="conversation-actions">

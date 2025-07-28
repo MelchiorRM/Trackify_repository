@@ -7,8 +7,7 @@
             <div class="card">
                 <!-- Post Header -->
                 <div class="card-header d-flex align-items-center">
-                    <img src="{{ post.user.profile_picture or url_for('static', filename='defaults/user.png') }}" 
-                         class="rounded-circle me-3" style="width: 50px; height: 50px; object-fit: cover;">
+                    <img src="{{ url_for('static', filename=post.user.profile_picture) }}" alt="Profile picture of {{ post.user.username }}" class="rounded-circle me-3" width="50" height="50">
                     <div class="flex-grow-1">
                         <h6 class="mb-0">{{ post.user.username }}</h6>
                         <small class="text-muted">{{ post.created_at.strftime('%B %d, %Y at %I:%M %p') }}</small>
@@ -141,8 +140,7 @@
                             {% for comment in post.comments %}
                             <div class="comment-item mb-2" data-comment-id="{{ comment.comment_id }}">
                                 <div class="d-flex align-items-start">
-                                    <img src="{{ comment.user.profile_picture or url_for('static', filename='defaults/user.png') }}" 
-                                         class="rounded-circle me-2" style="width: 30px; height: 30px; object-fit: cover;">
+                                    <img src="{{ url_for('static', filename=comment.user.profile_picture) }}" alt="Profile picture of {{ comment.user.username }}" class="rounded-circle me-3" width="40" height="40">
                                     <div class="flex-grow-1">
                                         <div class="comment-content">
                                             <strong>{{ comment.user.username }}</strong>
