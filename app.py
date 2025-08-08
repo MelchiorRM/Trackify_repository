@@ -10,6 +10,7 @@ from models.user_model import db, User
 from config import Config
 from flask_session import Session
 from flask_bcrypt import Bcrypt
+from utils.email_utils import mail
 from error import error_handler
 
 bcrypt = Bcrypt()
@@ -21,6 +22,7 @@ def create_app():
     db.init_app(app)
     bcrypt.init_app(app)
     Session(app)
+    mail.init_app(app)  # Initialize Flask-Mail
 
     login_manager = LoginManager()
     login_manager.init_app(app)

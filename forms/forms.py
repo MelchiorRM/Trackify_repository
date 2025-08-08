@@ -50,4 +50,18 @@ class SearchForm(FlaskForm):
         ('cinema', 'Movies'),
         ('music', 'Music')
     ], validators=[DataRequired()])
-    submit = SubmitField('Search') 
+    submit = SubmitField('Search')
+
+class RequestPasswordResetForm(FlaskForm):
+    email = StringField('Email', validators=[DataRequired(), Email()])
+    submit = SubmitField('Request Password Reset')
+
+    def validate_email(self, email):
+        user = User.query.filter_by(email=email.data).first()
+        if not user:
+            raise ValidationError('No account found with that email address.')
+
+class ResetPasswordForm(FlaskForm):
+    password = PasswordField('New Password', validators=[DataRequired(), Length(min=6)])
+    confirm_password = PasswordField('Confirm New Password', validators=[DataRequired(), EqualTo('password')])
+    submit = SubmitField('Reset Password') 

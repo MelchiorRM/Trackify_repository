@@ -322,15 +322,23 @@ def save_external_media():
                 db.session.add(book)
                 db.session.flush()  # Get the book_id
             
-            # Create user media entry
-            user_media = UserMedia(
+            # Check if user already has this book in their library
+            existing_user_media = UserMedia.query.filter_by(
                 user_id=current_user.user_id,
                 book_id=book.book_id,
-                media_type='book',
-                done=True,
-                date_consumed=datetime.now()
-            )
-            db.session.add(user_media)
+                media_type='book'
+            ).first()
+            
+            if not existing_user_media:
+                # Create user media entry (not consumed, not planned)
+                user_media = UserMedia(
+                    user_id=current_user.user_id,
+                    book_id=book.book_id,
+                    media_type='book',
+                    done=False,
+                    planned=False
+                )
+                db.session.add(user_media)
             
         elif media_type == 'music':
             # Check if music already exists
@@ -357,15 +365,23 @@ def save_external_media():
                 db.session.add(music)
                 db.session.flush()  # Get the music_id
             
-            # Create user media entry
-            user_media = UserMedia(
+            # Check if user already has this music in their library
+            existing_user_media = UserMedia.query.filter_by(
                 user_id=current_user.user_id,
                 music_id=music.music_id,
-                media_type='music',
-                done=True,
-                date_consumed=datetime.now()
-            )
-            db.session.add(user_media)
+                media_type='music'
+            ).first()
+            
+            if not existing_user_media:
+                # Create user media entry (not consumed, not planned)
+                user_media = UserMedia(
+                    user_id=current_user.user_id,
+                    music_id=music.music_id,
+                    media_type='music',
+                    done=False,
+                    planned=False
+                )
+                db.session.add(user_media)
             
         elif media_type == 'cinema':
             # Check if cinema already exists
@@ -392,15 +408,23 @@ def save_external_media():
                 db.session.add(cinema)
                 db.session.flush()  # Get the cinema_id
             
-            # Create user media entry
-            user_media = UserMedia(
+            # Check if user already has this cinema in their library
+            existing_user_media = UserMedia.query.filter_by(
                 user_id=current_user.user_id,
                 cinema_id=cinema.cinema_id,
-                media_type='cinema',
-                done=True,
-                date_consumed=datetime.now()
-            )
-            db.session.add(user_media)
+                media_type='cinema'
+            ).first()
+            
+            if not existing_user_media:
+                # Create user media entry (not consumed, not planned)
+                user_media = UserMedia(
+                    user_id=current_user.user_id,
+                    cinema_id=cinema.cinema_id,
+                    media_type='cinema',
+                    done=False,
+                    planned=False
+                )
+                db.session.add(user_media)
         
         db.session.commit()
         
@@ -414,7 +438,7 @@ def save_external_media():
         
         return jsonify({
             'success': True, 
-            'message': f'{media_type.title()} saved to library!',
+            'message': f'{media_type.title()} added to library!',
             'redirect_url': redirect_url
         })
         
@@ -456,3 +480,117 @@ def add_to_library():
         flash("Successfully added to your library!", "success")
 
     return redirect(url_for("media_routes.media", media_type=media_type, media_id=media_id))
+
+@media_routes.route("/api/media/<int:media_id>/plan", methods=["POST"])
+@login_required
+def add_to_planner_api():
+    """Add media to planner via API"""
+    data = request.get_json()
+    media_id = request.view_args.get('media_id')
+    media_type = data.get('media_type')
+    
+    if not media_type:
+        return jsonify({'success': False, 'message': 'Media type is required'}), 400
+    
+    try:
+        # Find the user media entry
+        user_media = UserMedia.query.filter_by(
+            user_id=current_user.user_id,
+            media_type=media_type,
+            **{f"{media_type}_id": media_id}
+        ).first()
+        
+        if not user_media:
+            # Create new user media entry
+            user_media = UserMedia(
+                user_id=current_user.user_id,
+                media_type=media_type,
+                planned=True,
+                done=False,
+                **{f"{media_type}_id": media_id}
+            )
+            db.session.add(user_media)
+        else:
+            # Update existing entry
+            user_media.planned = True
+            user_media.done = False
+        
+        db.session.commit()
+        return jsonify({'success': True, 'message': 'Added to planner!'})
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+@media_routes.route("/api/media/<int:media_id>/remove", methods=["POST"])
+@login_required
+def remove_from_planner_api():
+    """Remove media from planner via API"""
+    data = request.get_json()
+    media_id = request.view_args.get('media_id')
+    media_type = data.get('media_type')
+    
+    if not media_type:
+        return jsonify({'success': False, 'message': 'Media type is required'}), 400
+    
+    try:
+        # Find the user media entry
+        user_media = UserMedia.query.filter_by(
+            user_id=current_user.user_id,
+            media_type=media_type,
+            **{f"{media_type}_id": media_id}
+        ).first()
+        
+        if user_media:
+            user_media.planned = False
+            db.session.commit()
+            return jsonify({'success': True, 'message': 'Removed from planner!'})
+        else:
+            return jsonify({'success': False, 'message': 'Media not found in planner'}), 404
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+@media_routes.route("/api/media/<int:media_id>/consume", methods=["POST"])
+@login_required
+def mark_as_consumed_api():
+    """Mark media as consumed via API"""
+    data = request.get_json()
+    media_id = request.view_args.get('media_id')
+    media_type = data.get('media_type')
+    
+    if not media_type:
+        return jsonify({'success': False, 'message': 'Media type is required'}), 400
+    
+    try:
+        # Find the user media entry
+        user_media = UserMedia.query.filter_by(
+            user_id=current_user.user_id,
+            media_type=media_type,
+            **{f"{media_type}_id": media_id}
+        ).first()
+        
+        if not user_media:
+            # Create new user media entry
+            user_media = UserMedia(
+                user_id=current_user.user_id,
+                media_type=media_type,
+                done=True,
+                planned=False,
+                date_consumed=datetime.now(),
+                **{f"{media_type}_id": media_id}
+            )
+            db.session.add(user_media)
+        else:
+            # Update existing entry
+            user_media.done = True
+            user_media.planned = False
+            user_media.date_consumed = datetime.now()
+        
+        db.session.commit()
+        return jsonify({'success': True, 'message': 'Marked as consumed!'})
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'message': str(e)}), 500

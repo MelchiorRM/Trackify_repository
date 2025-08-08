@@ -1,7 +1,9 @@
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import UserMixin
 from flask_bcrypt import Bcrypt
-from datetime import datetime
+from datetime import datetime, timedelta
+import secrets
+import string
 db = SQLAlchemy()
 bcrypt = Bcrypt()
 class User(db.Model, UserMixin):
@@ -16,6 +18,10 @@ class User(db.Model, UserMixin):
     theme = db.Column(db.String(20), default='light')
     notifications_enabled = db.Column(db.Boolean, default=True)
     email_notifications = db.Column(db.Boolean, default=True)
+    
+    # Password reset fields
+    reset_token = db.Column(db.String(100), unique=True, nullable=True)
+    reset_token_expiry = db.Column(db.DateTime, nullable=True)
 
     # Add new relationships
     ratings = db.relationship('Rating', backref='user', lazy='dynamic')
@@ -66,6 +72,25 @@ class User(db.Model, UserMixin):
         if follow:
             db.session.delete(follow)
             db.session.commit()
+    
+    def generate_reset_token(self):
+        """Generate a secure reset token"""
+        self.reset_token = ''.join(secrets.choice(string.ascii_letters + string.digits) for _ in range(32))
+        self.reset_token_expiry = datetime.utcnow() + timedelta(hours=1)  # Token expires in 1 hour
+        return self.reset_token
+    
+    def verify_reset_token(self, token):
+        """Verify if the reset token is valid and not expired"""
+        if (self.reset_token == token and 
+            self.reset_token_expiry and 
+            self.reset_token_expiry > datetime.utcnow()):
+            return True
+        return False
+    
+    def clear_reset_token(self):
+        """Clear the reset token after use"""
+        self.reset_token = None
+        self.reset_token_expiry = None
     
     @property
     def profile_picture_url(self):

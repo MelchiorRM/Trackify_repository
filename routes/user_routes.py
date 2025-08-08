@@ -12,8 +12,9 @@ from config import Config
 import os
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
-from forms.forms import LoginForm, RegistrationForm, SearchForm, ProfileForm
+from forms.forms import LoginForm, RegistrationForm, SearchForm, ProfileForm, RequestPasswordResetForm, ResetPasswordForm
 from datetime import datetime
+from utils.email_utils import send_password_reset_email, send_password_changed_email
 
 user_routes = Blueprint('user_routes', __name__)
 bcrypt = Bcrypt()
@@ -229,6 +230,59 @@ def recommendations():
         current_page=combined_data.get("current_page", 1),
         total_pages=combined_data.get("total_pages", 1)
     )
+
+@user_routes.route("/request_password_reset", methods=["GET", "POST"])
+def request_password_reset():
+    if current_user.is_authenticated:
+        return redirect(url_for('main_routes.home'))
+    
+    form = RequestPasswordResetForm()
+    if form.validate_on_submit():
+        user = User.query.filter_by(email=form.email.data).first()
+        if user:
+            # Generate reset token
+            token = user.generate_reset_token()
+            db.session.commit()
+            
+            # Create reset URL
+            reset_url = url_for('user_routes.reset_password', token=token, _external=True)
+            
+            # Send email
+            if send_password_reset_email(user, reset_url):
+                flash('Password reset instructions have been sent to your email.', 'success')
+            else:
+                flash('Failed to send password reset email. Please try again.', 'error')
+            
+            return redirect(url_for('user_routes.login'))
+    
+    return render_template('request_password_reset.html', form=form)
+
+@user_routes.route("/reset_password/<token>", methods=["GET", "POST"])
+def reset_password(token):
+    if current_user.is_authenticated:
+        return redirect(url_for('main_routes.home'))
+    
+    # Find user by token
+    user = User.query.filter_by(reset_token=token).first()
+    
+    if not user or not user.verify_reset_token(token):
+        flash('Invalid or expired reset token.', 'error')
+        return redirect(url_for('user_routes.request_password_reset'))
+    
+    form = ResetPasswordForm()
+    if form.validate_on_submit():
+        # Update password
+        user.password_hash = bcrypt.generate_password_hash(form.password.data).decode('utf-8')
+        user.clear_reset_token()
+        db.session.commit()
+        
+        # Send confirmation email
+        send_password_changed_email(user)
+        
+        flash('Your password has been reset successfully.', 'success')
+        return redirect(url_for('user_routes.login'))
+    
+    return render_template('reset_password.html', form=form, token=token)
 
 @user_routes.route('/profile/edit', methods=['GET', 'POST'])
 @login_required
