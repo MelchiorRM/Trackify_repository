@@ -22,13 +22,19 @@
                     <div class="conversations-list">
                         {% if conversations %}
                             {% for conv in conversations %}
-                            <div class="conversation-item {% if conv.unread_count > 0 %}unread{% endif %}" 
+                            <div class="conversation-item {% if conv.unread_count > 0 %}unread{% endif %}"
                                  data-user-id="{{ conv.user.user_id }}">
-                                <div class="d-flex align-items-center">
-                                    <img src="{{ url_for('static', filename=conv.user.profile_picture) }}" alt="Profile picture of {{ conv.user.username }}" class="rounded-circle" width="50" height="50">
-                                    <div class="ms-3">
-                                        <h6 class="mb-0">{{ conv.user.username }}</h6>
-                                        <small class="text-muted">{{ conv.latest_message.content | truncate(30) }}</small>
+                                <div class="d-flex align-items-center w-100">
+                                    <img src="{{ url_for('static', filename=conv.user.profile_picture) }}"
+                                         alt="{{ conv.user.username }}" class="conversation-avatar">
+                                    <div class="conversation-content ms-3">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <span class="conversation-name">{{ conv.user.username }}</span>
+                                            <span class="conversation-time">
+                                                {{ conv.latest_message.created_at.strftime('%H:%M') if conv.latest_message else '' }}
+                                            </span>
+                                        </div>
+                                        <div class="conversation-preview">{{ conv.latest_message.content | default('') | truncate(36) }}</div>
                                     </div>
                                 </div>
                                 {% if conv.unread_count > 0 %}
@@ -53,7 +59,7 @@
 
         <!-- Conversation Area -->
         <div class="col-md-8">
-            <div class="messages-container">
+            <div class="conversation-container">
                 <div id="conversationArea" class="h-100 d-flex align-items-center justify-content-center">
                     <div class="text-center text-muted">
                         <i class="fas fa-comments fa-3x mb-3"></i>
@@ -88,4 +94,5 @@
 </div>
 
 <script src="{{ url_for('static', filename='js/messages.js') }}"></script>
+<script src="{{ url_for('static', filename='js/conversation.js') }}"></script>
 {% endblock %} 

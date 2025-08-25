@@ -84,6 +84,9 @@ def conversation(user_id):
     
     db.session.commit()
     
+    # Support partial rendering for AJAX load inside messages page
+    if request.args.get('partial') == '1':
+        return render_template('partials/conversation_inner.html', other_user=other_user, messages=messages)
     return render_template('conversation.html', other_user=other_user, messages=messages)
 
 @message_routes.route('/messages/<int:user_id>/send', methods=['POST'])

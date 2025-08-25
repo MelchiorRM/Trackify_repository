@@ -36,8 +36,8 @@ def register():
         
         user = User(
             username=form.username.data,
-            email=form.email.data,
-            password_hash=bcrypt.generate_password_hash(form.password.data).decode('utf-8')
+            password=form.password.data,
+            email=form.email.data
         )
         db.session.add(user)
         db.session.commit()

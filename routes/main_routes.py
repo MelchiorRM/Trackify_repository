@@ -177,9 +177,13 @@ def planner():
 @main_routes.route('/network')
 @login_required
 def network():
-    # Get followers and following
-    followers = current_user.followers
-    following = current_user.following
+    # Get followers and following as User lists
+    followers_query = current_user.followers
+    following_query = current_user.following
+    followers = [f.follower for f in followers_query.all()]
+    following = [f.followed for f in following_query.all()]
+    followers_count = followers_query.count()
+    following_count = following_query.count()
     
     # Get search results if any
     search_results = None
@@ -191,6 +195,8 @@ def network():
     return render_template('network.html',
                          followers=followers,
                          following=following,
+                         followers_count=followers_count,
+                         following_count=following_count,
                          search_results=search_results)
 
 @main_routes.route('/media/<int:media_id>')

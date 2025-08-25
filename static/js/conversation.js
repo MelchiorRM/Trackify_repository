@@ -5,12 +5,14 @@ let sendBtn = null;
 let messagesArea = null;
 let isTyping = false;
 let typingTimeout = null;
+let containerEl = null;
 
 document.addEventListener('DOMContentLoaded', function() {
     initializeConversation();
 });
 
 function initializeConversation() {
+    containerEl = document.querySelector('.conversation-container');
     messageInput = document.getElementById('messageInput');
     sendBtn = document.getElementById('sendBtn');
     messagesArea = document.getElementById('messagesArea');
@@ -37,6 +39,15 @@ function initializeConversation() {
     // Scroll to bottom
     scrollToBottom();
     
+    // Ensure click handler is bound even if inline onclick fails
+    try {
+        sendBtn.removeEventListener('click', sendMessage);
+    } catch (e) {}
+    sendBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        sendMessage();
+    });
+
     // Start real-time updates
     startRealTimeUpdates();
 }
@@ -66,14 +77,27 @@ function sendMessage() {
     // Disable send button
     sendBtn.disabled = true;
     
-    fetch(`/messages/${otherUserId}/send`, {
+    const otherUserIdLocal = parseInt(messagesArea?.dataset.otherUserId || containerEl?.dataset.otherUserId || window.otherUserId || 0);
+    if (!otherUserIdLocal || Number.isNaN(otherUserIdLocal)) {
+        console.error('Missing otherUserId for conversation');
+        showToast('Cannot determine recipient. Please re-open the conversation.', 'error');
+        sendBtn.disabled = false;
+        return;
+    }
+    fetch(`/messages/${otherUserIdLocal}/send`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
         },
         body: JSON.stringify({ content: content })
     })
-    .then(response => response.json())
+    .then(async response => {
+        if (!response.ok) {
+            const text = await response.text();
+            throw new Error(text || `HTTP ${response.status}`);
+        }
+        return response.json();
+    })
     .then(data => {
         if (data.success) {
             // Add message to display
@@ -142,7 +166,8 @@ function startRealTimeUpdates() {
 }
 
 function fetchNewMessages() {
-    fetch(`/api/messages/${otherUserId}`)
+    const otherUserIdLocal = parseInt(messagesArea?.dataset.otherUserId || containerEl?.dataset.otherUserId || window.otherUserId || 0);
+    fetch(`/api/messages/${otherUserIdLocal}`)
         .then(response => response.json())
         .then(data => {
             if (data.success) {

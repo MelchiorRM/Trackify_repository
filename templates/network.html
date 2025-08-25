@@ -11,10 +11,10 @@
                         <h4 class="mb-0">Network</h4>
                         <div class="btn-group">
                             <button type="button" class="btn btn-outline-primary active" id="followersTab">
-                                Followers ({{ followers.count() }})
+                                Followers ({{ followers_count }})
                             </button>
                             <button type="button" class="btn btn-outline-primary" id="followingTab">
-                                Following ({{ following.count() }})
+                                Following ({{ following_count }})
                             </button>
                         </div>
                     </div>
@@ -29,9 +29,9 @@
                     <h5>Followers</h5>
                 </div>
                 <div class="card-body">
-                    {% if followers.all() %}
+                    {% if followers %}
                         <div class="row">
-                            {% for follower in followers.all() %}
+                            {% for follower in followers %}
                                 <div class="col-md-6 col-lg-4 mb-4">
                                     <div class="card h-100">
                                         <div class="card-body">
@@ -78,9 +78,9 @@
                     <h5>Following</h5>
                 </div>
                 <div class="card-body">
-                    {% if following.all() %}
+                    {% if following %}
                         <div class="row">
-                            {% for followed in following.all() %}
+                            {% for followed in following %}
                                 <div class="col-md-6 col-lg-4 mb-4">
                                     <div class="card h-100">
                                         <div class="card-body">
@@ -97,9 +97,15 @@
                                             <div class="d-flex justify-content-between">
                                                 <a href="{{ url_for('main_routes.profile', username=followed.username) }}" 
                                                    class="btn btn-sm btn-outline-primary">View Profile</a>
-                                                <form action="{{ url_for('user_routes.unfollow', username=followed.username) }}" 
+                                                <form action="{{ url_for('user_routes.follow', username=followed.username) }}" 
                                                       method="POST" class="d-inline">
-                                                    <button type="submit" class="btn btn-sm btn-danger">Unfollow</button>
+                                                    <button type="submit" class="btn btn-sm btn-primary">
+                                                        {% if current_user.is_following(followed) %}
+                                                            Unfollow
+                                                        {% else %}
+                                                            Follow
+                                                        {% endif %}
+                                                    </button>
                                                 </form>
                                             </div>
                                         </div>

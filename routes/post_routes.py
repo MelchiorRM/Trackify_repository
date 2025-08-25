@@ -1,6 +1,7 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify
 from flask_login import login_required, current_user
-from models.social_model import Post, Like, Comment, db, User
+from models.social_model import Post, Like, Comment
+from models.user_model import db, User
 from models.books import Book
 from models.music import Music
 from models.cinema import Cinema
@@ -272,9 +273,7 @@ def repost(post_id):
         user_id=current_user.user_id,
         content=repost_content,
         media_type=original_post.media_type,
-        media_id=original_post.media_id,
-        rating=original_post.rating,
-        review=original_post.review
+        media_id=original_post.media_id
     )
     
     db.session.add(new_post)

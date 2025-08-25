@@ -30,8 +30,9 @@ function initializeMessages() {
         }
     });
 
-    // Auto-refresh unread count
-    setInterval(updateUnreadCount, 30000); // Every 30 seconds
+    // Auto-refresh unread count more frequently
+    updateUnreadCount();
+    setInterval(updateUnreadCount, 10000); // Every 10 seconds
 }
 
 function searchConversations(query) {
@@ -63,14 +64,22 @@ function loadConversation(userId) {
     }
     
     // Load conversation in the right panel
-    fetch(`/messages/${userId}`)
+    fetch(`/messages/${userId}?partial=1`)
         .then(response => response.text())
         .then(html => {
             document.getElementById('conversationArea').innerHTML = html;
             currentConversation = userId;
-            
-            // Initialize conversation functionality
-            initializeConversation();
+            // Defer to ensure DOM is ready
+            setTimeout(() => {
+                const container = document.querySelector('.conversation-container');
+                if (container) {
+                    window.currentUserId = parseInt(container.dataset.currentUserId);
+                    window.otherUserId = parseInt(container.dataset.otherUserId);
+                    window.otherUsername = container.dataset.otherUsername;
+                    try { console.debug('Loaded conversation for userId:', window.otherUserId); } catch(e) {}
+                }
+                initializeConversation();
+            }, 50);
         })
         .catch(error => {
             console.error('Error loading conversation:', error);

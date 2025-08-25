@@ -64,7 +64,7 @@ async function toggleLike(postId) {
         const data = await response.json();
         
         if (data.success) {
-            const likeBtn = document.querySelector(`[data-post-id="${postId}"]`);
+            const likeBtn = document.querySelector(`.like-btn[data-post-id="${postId}"]`);
             const likeIcon = likeBtn.querySelector('i');
             const likeCount = likeBtn.querySelector('.like-count');
             
@@ -179,7 +179,9 @@ async function deleteComment(commentId) {
     }
     
     try {
-        const response = await fetch(`/api/post/${commentId}/comment/${commentId}`, {
+        const commentElement = document.querySelector(`[data-comment-id="${commentId}"]`);
+        const postId = commentElement?.closest('.post-card')?.dataset.postId;
+        const response = await fetch(`/api/post/${postId}/comment/${commentId}`, {
             method: 'DELETE',
             headers: {
                 'Content-Type': 'application/json',
@@ -190,12 +192,10 @@ async function deleteComment(commentId) {
         
         if (data.success) {
             // Remove comment from DOM
-            const commentElement = document.querySelector(`[data-comment-id="${commentId}"]`);
             if (commentElement) {
                 commentElement.remove();
                 
                 // Update comment count
-                const postId = commentElement.closest('.post-card').dataset.postId;
                 updateCommentCount(postId, -1);
             }
             
@@ -211,9 +211,10 @@ async function deleteComment(commentId) {
 
 // Update comment count
 function updateCommentCount(postId, change) {
-    const commentBtn = document.querySelector(`[data-post-id="${postId}"]`).parentNode.querySelector('.comment-count');
-    const currentCount = parseInt(commentBtn.textContent);
-    commentBtn.textContent = currentCount + change;
+    const commentCountEl = document.querySelector(`.post-card[data-post-id="${postId}"] .comment-count`);
+    if (!commentCountEl) return;
+    const currentCount = parseInt(commentCountEl.textContent);
+    commentCountEl.textContent = currentCount + change;
 }
 
 // Repost functionality

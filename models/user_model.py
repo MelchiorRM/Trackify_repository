@@ -63,6 +63,7 @@ class User(db.Model, UserMixin):
 
     def follow(self, user):
         if not self.is_following(user):
+            from models.social_model import Follow
             follow = Follow(follower_id=self.user_id, followed_id=user.user_id)
             db.session.add(follow)
             db.session.commit()

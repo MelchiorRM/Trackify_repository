@@ -10,9 +10,12 @@
                     <a href="{{ url_for('main_routes.home') }}" class="btn btn-outline-primary">Back to Home</a>
                 </div>
                 <div class="card-body">
+                    <div class="d-flex justify-content-end mb-3">
+                        <button id="markAllReadBtn" class="btn btn-sm btn-outline-secondary">Mark all as read</button>
+                    </div>
                     {% if notifications %}
                         {% for notification in notifications %}
-                            <div class="notification-item mb-3 pb-3 border-bottom">
+                            <div class="notification-item mb-3 pb-3 border-bottom {% if not notification.read %}bg-light{% endif %}">
                                 <p class="mb-1">{{ notification.message }}</p>
                                 <small class="text-muted">{{ notification.created_at.strftime('%B %d, %Y %H:%M') }}</small>
                             </div>
@@ -25,4 +28,22 @@
         </div>
     </div>
 </div>
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const btn = document.getElementById('markAllReadBtn');
+    if (btn) {
+        btn.addEventListener('click', function() {
+            fetch('/api/notifications/mark-all-read', { method: 'POST' })
+                .then(r => r.json())
+                .then(data => {
+                    if (data.success) {
+                        window.location.reload();
+                    }
+                });
+        });
+    }
+});
+</script>
+{% endblock %}
 {% endblock %}

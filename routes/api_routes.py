@@ -2,7 +2,7 @@ from flask import Blueprint, jsonify, request
 from flask_login import login_required, current_user
 from models.user_media_model import UserMedia
 from models.user_model import db, User
-from models.social_model import List, ListItem, Follow
+from models.social_model import List, ListItem, Follow, Notification
 from models.books import Book
 from models.music import Music
 from models.cinema import Cinema
@@ -10,6 +10,39 @@ from datetime import datetime
 from models.diary_model import DiaryEntry
 
 api_routes = Blueprint('api_routes', __name__)
+
+@api_routes.route('/api/notifications/unread', methods=['GET'])
+@login_required
+def unread_notifications_count():
+    count = Notification.query.filter_by(user_id=current_user.user_id, read=False).count()
+    return jsonify({'success': True, 'unread_count': count})
+
+@api_routes.route('/api/notifications/latest', methods=['GET'])
+@login_required
+def latest_notifications():
+    limit = request.args.get('limit', 10, type=int)
+    notes = Notification.query.filter_by(user_id=current_user.user_id).order_by(Notification.created_at.desc()).limit(limit).all()
+    return jsonify({'success': True, 'notifications': [
+        {
+            'id': n.notification_id,
+            'message': n.message,
+            'created_at': n.created_at.isoformat(),
+            'read': n.read
+        } for n in notes
+    ]})
+
+@api_routes.route('/api/notifications/mark-all-read', methods=['POST'])
+@login_required
+def mark_all_notifications_read():
+    Notification.query.filter_by(user_id=current_user.user_id, read=False).update({Notification.read: True})
+    db.session.commit()
+    return jsonify({'success': True})
+
+# Fallback endpoint to prevent JSON errors in base template if messages API isn't implemented
+@api_routes.route('/api/messages/unread', methods=['GET'])
+@login_required
+def unread_messages_count():
+    return jsonify({'success': True, 'unread_count': 0})
 
 @api_routes.route('/media/<int:media_id>/update-date', methods=['POST'])
 @login_required

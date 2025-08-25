@@ -42,6 +42,12 @@ def create_app():
 
     with app.app_context():
         db.create_all()
+        # Normalize existing notifications: set NULL reads to False
+        try:
+            db.session.execute(db.text("UPDATE notifications SET read = 0 WHERE read IS NULL"))
+            db.session.commit()
+        except Exception:
+            db.session.rollback()
 
     error_handler(app)
     return app
