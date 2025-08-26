@@ -10,62 +10,85 @@
     {% block extra_css %}{% endblock %}
 </head>
 <body class="d-flex flex-column min-vh-100">
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4 modern-navbar">
         <div class="container-fluid">
-            <a class="navbar-brand font-weight-bold" href="{{ url_for('main_routes.home') }}">Trackify</a>
+            <a class="navbar-brand font-weight-bold d-flex align-items-center" href="{{ url_for('main_routes.home') }}">
+                <i class="fas fa-compass me-2"></i> Trackify
+            </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
                 aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
-                <ul class="navbar-nav align-items-center">
+                <ul class="navbar-nav align-items-center icon-nav">
                     {% if current_user.is_authenticated %}
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('main_routes.home') }}">Home</a>
+                    <li class="nav-item nav-icon" title="Home">
+                        <a class="nav-link" href="{{ url_for('main_routes.home') }}">
+                            <i class="fas fa-house"></i>
+                            <span class="nav-label">Home</span>
+                        </a>
                     </li>
-                    <li class="nav-item">
+                    <li class="nav-item nav-icon" title="Posts">
                         <a class="nav-link" href="{{ url_for('post_routes.posts') }}">
-                            <i class="fas fa-stream"></i> Posts
+                            <i class="fas fa-stream"></i>
+                            <span class="nav-label">Posts</span>
                         </a>
                     </li>
-                    <li class="nav-item">
-                        <a class="nav-link position-relative" href="{{ url_for('message_routes.messages') }}">
-                            <i class="fas fa-envelope"></i> Messages
-                            <span class="badge bg-danger position-absolute top-0 start-100 translate-middle" 
-                                  id="messageBadge" style="display: none;">0</span>
+                    <li class="nav-item nav-icon position-relative" title="Messages">
+                        <a class="nav-link" href="{{ url_for('message_routes.messages') }}">
+                            <i class="fas fa-envelope"></i>
+                            <span class="nav-label">Messages</span>
+                            <span class="badge bg-danger position-absolute top-0 start-100 translate-middle" id="messageBadge" style="display: none;">0</span>
                         </a>
                     </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('main_routes.profile', username=current_user.username) }}">Profile</a>
+                    <li class="nav-item nav-icon" title="Profile">
+                        <a class="nav-link" href="{{ url_for('main_routes.profile', username=current_user.username) }}">
+                            <i class="fas fa-user"></i>
+                            <span class="nav-label">Profile</span>
+                        </a>
                     </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('main_routes.network') }}">Network</a>
+                    <li class="nav-item nav-icon" title="Network">
+                        <a class="nav-link" href="{{ url_for('main_routes.network') }}">
+                            <i class="fas fa-users"></i>
+                            <span class="nav-label">Network</span>
+                        </a>
                     </li>
-                    <li class="nav-item">
+                    <li class="nav-item nav-icon" title="Planner">
                         <a class="nav-link" href="{{ url_for('main_routes.planner') }}">
-                            <i class="fas fa-calendar"></i> Planner
+                            <i class="fas fa-calendar"></i>
+                            <span class="nav-label">Planner</span>
                         </a>
                     </li>
-                    <li class="nav-item">
+                    <li class="nav-item nav-icon" title="Diary">
                         <a class="nav-link" href="{{ url_for('main_routes.diary') }}">
-                            <i class="fas fa-book"></i> Diary
+                            <i class="fas fa-book"></i>
+                            <span class="nav-label">Diary</span>
                         </a>
                     </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('main_routes.stats') }}">Stats</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link position-relative" href="{{ url_for('media_routes.notifications') }}">
-                            <i class="fas fa-bell"></i> Notifications
-                            <span class="badge bg-danger position-absolute top-0 start-100 translate-middle" 
-                                  id="notificationBadge" style="display: none;">0</span>
+                    <li class="nav-item nav-icon" title="Stats">
+                        <a class="nav-link" href="{{ url_for('main_routes.stats') }}">
+                            <i class="fas fa-chart-line"></i>
+                            <span class="nav-label">Stats</span>
                         </a>
                     </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('main_routes.settings') }}">Settings</a>
+                    <li class="nav-item nav-icon position-relative" title="Notifications">
+                        <a class="nav-link" href="{{ url_for('media_routes.notifications') }}">
+                            <i class="fas fa-bell"></i>
+                            <span class="nav-label">Notifications</span>
+                            <span class="badge bg-danger position-absolute top-0 start-100 translate-middle" id="notificationBadge" style="display: none;">0</span>
+                        </a>
                     </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('user_routes.logout') }}">Logout</a>
+                    <li class="nav-item nav-icon" title="Settings">
+                        <a class="nav-link" href="{{ url_for('main_routes.settings') }}">
+                            <i class="fas fa-gear"></i>
+                            <span class="nav-label">Settings</span>
+                        </a>
+                    </li>
+                    <li class="nav-item nav-icon" title="Logout">
+                        <a class="nav-link" href="{{ url_for('user_routes.logout') }}">
+                            <i class="fas fa-right-from-bracket"></i>
+                            <span class="nav-label">Logout</span>
+                        </a>
                     </li>
                     <form class="form-inline my-2 my-lg-0 d-flex align-items-center"
                         action="{{ url_for('media_routes.search') }}" method="GET">

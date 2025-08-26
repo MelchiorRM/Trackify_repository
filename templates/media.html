@@ -10,31 +10,38 @@
                     <div class="d-flex justify-content-between align-items-start">
                         <h2 class="card-title">{{ media.title }}</h2>
                         <div class="btn-group">
-                            <!-- Post Media Button -->
-                            <a href="{{ url_for('post_routes.create_post', media_type=media_type, media_id=media.id) }}" 
+                            <!-- Post Media Button (pass correct id field by type) -->
+                            <a href="{{ url_for('post_routes.create_post', media_type=media_type, media_id=(media.book_id if media_type=='book' else (media.music_id if media_type=='music' else media.cinema_id))) }}" 
                                class="btn btn-info">
                                 <i class="fas fa-share"></i> Post Media
                             </a>
-                            
+
+                            <!-- Unified Status -->
+                            <div class="ms-2">
+                                <span class="badge bg-secondary">Status:
+                                    {% if user_media %}
+                                        {% if user_media.done %} Consumed
+                                        {% elif user_media.planned %} Planned
+                                        {% else %} Unchecked
+                                        {% endif %}
+                                    {% else %} Unchecked
+                                    {% endif %}
+                                </span>
+                            </div>
+
                             {% if user_media and user_media.planned %}
-                                <button class="btn btn-warning" onclick="removeFromPlanner('{{ media.id }}', '{{ media_type }}')">
+                                <button class="btn btn-warning ms-2" onclick="removeFromPlanner('{{ media.book_id if media_type=='book' else (media.music_id if media_type=='music' else media.cinema_id) }}', '{{ media_type }}')">
                                     <i class="fas fa-calendar-minus"></i> Remove from Planner
                                 </button>
                             {% else %}
-                                <button class="btn btn-primary" onclick="addToPlanner('{{ media.id }}', '{{ media_type }}')">
+                                <button class="btn btn-primary ms-2" onclick="addToPlannerAndGo('{{ media.book_id if media_type=='book' else (media.music_id if media_type=='music' else media.cinema_id) }}', '{{ media_type }}')">
                                     <i class="fas fa-calendar-plus"></i> Add to Planner
                                 </button>
                             {% endif %}
-                            
-                            {% if user_media and user_media.done %}
-                                <button class="btn btn-success" disabled>
-                                    <i class="fas fa-check"></i> Consumed
-                                </button>
-                            {% else %}
-                                <button class="btn btn-success" onclick="markAsConsumed('{{ media.id }}', '{{ media_type }}')">
-                                    <i class="fas fa-check"></i> Mark as Consumed
-                                </button>
-                            {% endif %}
+
+                            <button class="btn btn-success ms-2" onclick="showAddDiaryModal()">
+                                <i class="fas fa-book"></i> Add to Diary
+                            </button>
                         </div>
                     </div>
                     
@@ -204,6 +211,19 @@
 
 {% block scripts %}
 <script>
+function addToPlannerAndGo(mediaId, mediaType) {
+    fetch(`/api/media/${mediaId}/plan`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ media_type: mediaType })
+    }).then(r => r.json()).then(data => {
+        if (data.success) {
+            window.location.href = '/planner';
+        } else {
+            alert('Error adding to planner');
+        }
+    }).catch(() => alert('Error adding to planner'));
+}
 function showAddDiaryModal() {
     const modal = new bootstrap.Modal(document.getElementById('diaryModal'));
     modal.show();
@@ -212,20 +232,20 @@ function showAddDiaryModal() {
 function saveDiaryEntry() {
     const content = document.getElementById('diaryContent').value;
     // Add API call to save diary entry
-    fetch('/api/diary/add', {
+    fetch('/api/diary', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-            media_id: '{{ media.id }}',
+            media_id: '{{ user_media.user_media_id if user_media else "" }}',
             content: content
         })
     })
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            location.reload();
+            window.location.href = '/diary';
         } else {
             alert('Error saving diary entry');
         }

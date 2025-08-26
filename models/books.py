@@ -28,8 +28,13 @@ def search_books(query, page=1):
 def search_google_books(query):
     api_key = current_app.config.get('GOOGLE_BOOKS_API_KEY')
     url = f'https://www.googleapis.com/books/v1/volumes?q={query}&key={api_key}'
-    response = requests.get(url)
-    data = response.json()
+    try:
+        response = requests.get(url, timeout=8)
+        response.raise_for_status()
+        data = response.json()
+    except Exception:
+        # Fail silent for external API; fall back to local only
+        return [], 0, 1
     books = []
     for item in data.get("items",[]):
         volume_info = item.get("volumeInfo")
@@ -48,8 +53,13 @@ def search_google_books(query):
 
 def search_open_library(query, page=1):
     url = f"https://openlibrary.org/search.json?q={query}&page={page}"
-    response = requests.get(url)
-    data = response.json()
+    try:
+        response = requests.get(url, timeout=8)
+        response.raise_for_status()
+        data = response.json()
+    except Exception:
+        # Fail silent; return nothing from Open Library
+        return [], 0, page
     books = []
     for doc in data.get("docs", []):
         book_data = {

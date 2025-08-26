@@ -267,11 +267,12 @@ def add_to_planner():
     title = request.form.get("title")
     media_type = request.form.get("media_type")
     if title and media_type:
-        existing_media = UserMedia.query.filter_by(user_id=current_user.id, title=title).first()
+        # This legacy endpoint is not used by media page; keep minimal fix for user_id field
+        existing_media = UserMedia.query.filter_by(user_id=current_user.user_id).first()
         if existing_media:
             flash('Media already exists in your planner or library.', 'warning')
         else:
-            new_media = UserMedia(user_id=current_user.id, title=title, media_type=media_type, planned=True)
+            new_media = UserMedia(user_id=current_user.user_id, media_type=media_type, planned=True)
             db.session.add(new_media)
             db.session.commit()
             flash('Media added to planner!', 'success')
@@ -316,7 +317,7 @@ def save_external_media():
                     language=media_data.get('language', 'Unknown'),
                     publisher=media_data.get('publisher'),
                     country=media_data.get('country'),
-                    description=media_data.get('reviews'),
+                    description=media_data.get('description') or media_data.get('reviews'),
                     coverart=media_data.get('coverart')
                 )
                 db.session.add(book)
@@ -359,7 +360,7 @@ def save_external_media():
                     language=media_data.get('language', 'Unknown'),
                     label=media_data.get('label'),
                     country=media_data.get('country'),
-                    reviews=media_data.get('reviews'),
+                    description=media_data.get('description') or media_data.get('reviews'),
                     coverart=media_data.get('coverart')
                 )
                 db.session.add(music)
@@ -402,7 +403,7 @@ def save_external_media():
                     language=media_data.get('language', 'Unknown'),
                     type=media_data.get('type', 'movie'),
                     country=media_data.get('country'),
-                    reviews=media_data.get('reviews'),
+                    description=media_data.get('description') or media_data.get('reviews'),
                     coverart=media_data.get('coverart')
                 )
                 db.session.add(cinema)
@@ -516,7 +517,7 @@ def add_to_planner_api():
             user_media.done = False
         
         db.session.commit()
-        return jsonify({'success': True, 'message': 'Added to planner!'})
+        return jsonify({'success': True, 'message': 'Added to planner!', 'user_media_id': user_media.user_media_id})
         
     except Exception as e:
         db.session.rollback()
