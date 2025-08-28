@@ -258,8 +258,8 @@ def notifications():
 @media_routes.route("/planner", methods=['GET'])
 @login_required
 def planner():
-    planned_items = UserMedia.query.filter_by(user_id=current_user.user_id, planned=True).all()
-    return render_template("planner.html", planned_items=planned_items)
+    planned_media = UserMedia.query.filter_by(user_id=current_user.user_id, planned=True).order_by(UserMedia.planned_date.asc()).all()
+    return render_template("planner.html", planned_media=planned_media)
 
 @media_routes.route("/media/add/planned", methods=["POST"])
 @login_required

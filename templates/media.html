@@ -29,19 +29,20 @@
                                 </span>
                             </div>
 
+                            {% set current_media_id = media.book_id if media_type=='book' else (media.music_id if media_type=='music' else media.cinema_id) %}
                             {% if user_media and user_media.planned %}
                                 <button class="btn btn-warning ms-2" onclick="removeFromPlanner('{{ media.book_id if media_type=='book' else (media.music_id if media_type=='music' else media.cinema_id) }}', '{{ media_type }}')">
                                     <i class="fas fa-calendar-minus"></i> Remove from Planner
                                 </button>
                             {% else %}
-                                <button class="btn btn-primary ms-2" onclick="addToPlannerAndGo('{{ media.book_id if media_type=='book' else (media.music_id if media_type=='music' else media.cinema_id) }}', '{{ media_type }}')">
+                                <a class="btn btn-primary ms-2" href="{{ url_for('main_routes.planner') }}?media_type={{ media_type }}&media_id={{ current_media_id }}&media_title={{ media.title|urlencode }}">
                                     <i class="fas fa-calendar-plus"></i> Add to Planner
-                                </button>
+                                </a>
                             {% endif %}
 
-                            <button class="btn btn-success ms-2" onclick="showAddDiaryModal()">
+                            <a class="btn btn-success ms-2" href="{{ url_for('main_routes.diary') }}?media_type={{ media_type }}&media_id={{ current_media_id }}&media_title={{ media.title|urlencode }}">
                                 <i class="fas fa-book"></i> Add to Diary
-                            </button>
+                            </a>
                         </div>
                     </div>
                     
@@ -207,23 +208,11 @@
         </div>
     </div>
 </div>
+
 {% endblock %}
 
 {% block scripts %}
 <script>
-function addToPlannerAndGo(mediaId, mediaType) {
-    fetch(`/api/media/${mediaId}/plan`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ media_type: mediaType })
-    }).then(r => r.json()).then(data => {
-        if (data.success) {
-            window.location.href = '/planner';
-        } else {
-            alert('Error adding to planner');
-        }
-    }).catch(() => alert('Error adding to planner'));
-}
 function showAddDiaryModal() {
     const modal = new bootstrap.Modal(document.getElementById('diaryModal'));
     modal.show();

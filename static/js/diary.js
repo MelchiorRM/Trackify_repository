@@ -20,6 +20,7 @@ class DiaryManager {
         this.loadMoods();
         this.loadStats();
         this.loadEntries();
+        this.loadLibrary();
         this.initializeModals();
         this.handleUrlParameters();
     }
@@ -61,6 +62,27 @@ class DiaryManager {
                 this.currentPage = 1;
                 this.loadEntries();
             });
+        }
+    }
+
+    async loadLibrary() {
+        try {
+            const response = await fetch('/api/library');
+            const data = await response.json();
+            if (data.success) {
+                const select = document.getElementById('entryMedia');
+                if (!select) return;
+                // Clear except first
+                while (select.children.length > 1) select.removeChild(select.lastChild);
+                data.items.forEach(item => {
+                    const option = document.createElement('option');
+                    option.value = item.user_media_id;
+                    option.textContent = `${this.capitalizeFirst(item.media_type)}: ${item.title}`;
+                    select.appendChild(option);
+                });
+            }
+        } catch (e) {
+            console.error('Failed to load library', e);
         }
     }
 

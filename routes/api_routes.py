@@ -3,9 +3,9 @@ from flask_login import login_required, current_user
 from models.user_media_model import UserMedia
 from models.user_model import db, User
 from models.social_model import List, ListItem, Follow, Notification
-from models.books import Book
-from models.music import Music
-from models.cinema import Cinema
+from models.book_model import Book
+from models.music_model import Music
+from models.cinema_model import Cinema
 from datetime import datetime
 from models.diary_model import DiaryEntry
 
@@ -44,17 +44,17 @@ def mark_all_notifications_read():
 def unread_messages_count():
     return jsonify({'success': True, 'unread_count': 0})
 
-@api_routes.route('/media/<int:media_id>/update-date', methods=['POST'])
+@api_routes.route('/api/media/<int:user_media_id>/update-date', methods=['POST'])
 @login_required
-def update_media_date(media_id):
-    media = UserMedia.query.filter_by(id=media_id, user_id=current_user.id).first_or_404()
+def update_media_date(user_media_id):
+    media = UserMedia.query.filter_by(user_media_id=user_media_id, user_id=current_user.user_id).first_or_404()
     
     data = request.get_json()
     if not data or 'planned_date' not in data:
         return jsonify({'success': False, 'error': 'Missing planned_date'}), 400
     
     try:
-        media.planned_date = datetime.strptime(data['planned_date'], '%Y-%m-%d')
+        media.planned_date = datetime.strptime(data['planned_date'], '%Y-%m-%d').date()
         db.session.commit()
         return jsonify({'success': True})
     except ValueError:
@@ -63,42 +63,51 @@ def update_media_date(media_id):
         db.session.rollback()
         return jsonify({'success': False, 'error': str(e)}), 500
 
-@api_routes.route('/media/<int:media_id>/complete', methods=['POST'])
+# Library endpoints
+@api_routes.route('/api/library', methods=['GET'])
 @login_required
-def complete_media(media_id):
-    media = UserMedia.query.filter_by(id=media_id, user_id=current_user.id).first_or_404()
-    media.status = 'completed'
-    media.completed_at = datetime.utcnow()
+def get_library():
+    """Return current user's library (UserMedia entries)"""
+    items = UserMedia.query.filter_by(user_id=current_user.user_id).order_by(UserMedia.created_at.desc()).all()
+    return jsonify({'success': True, 'items': [item.to_dict() for item in items]})
+
+@api_routes.route('/api/media/<int:user_media_id>/complete', methods=['POST'])
+@login_required
+def complete_media(user_media_id):
+    media = UserMedia.query.filter_by(user_media_id=user_media_id, user_id=current_user.user_id).first_or_404()
+    media.done = True
+    media.planned = False
+    media.date_consumed = datetime.utcnow()
     db.session.commit()
     return jsonify({'success': True})
 
-@api_routes.route('/media/<int:media_id>/remove', methods=['POST'])
+@api_routes.route('/api/media/<int:user_media_id>/remove', methods=['POST'])
 @login_required
-def remove_media(media_id):
-    media = UserMedia.query.filter_by(id=media_id, user_id=current_user.id).first_or_404()
+def remove_media(user_media_id):
+    media = UserMedia.query.filter_by(user_media_id=user_media_id, user_id=current_user.user_id).first_or_404()
     db.session.delete(media)
     db.session.commit()
     return jsonify({'success': True})
 
-@api_routes.route('/media/plan', methods=['POST'])
+@api_routes.route('/api/media/plan', methods=['POST'])
 @login_required
 def plan_media():
     data = request.get_json()
-    if not data or not all(k in data for k in ['media_type', 'title', 'planned_date']):
+    if not data or not all(k in data for k in ['media_type', 'planned_date']):
         return jsonify({'success': False, 'error': 'Missing required fields'}), 400
     
     try:
-        media = UserMedia(
-            user_id=current_user.id,
-            media_type=data['media_type'],
-            title=data['title'],
-            planned_date=datetime.strptime(data['planned_date'], '%Y-%m-%d'),
-            notes=data.get('notes', ''),
-            status='planned'
-        )
-        db.session.add(media)
+        planned_date = datetime.strptime(data['planned_date'], '%Y-%m-%d').date()
+        # This endpoint expects caller to have ensured a UserMedia record exists
+        user_media_id = data.get('user_media_id')
+        if not user_media_id:
+            return jsonify({'success': False, 'error': 'user_media_id is required'}), 400
+        media = UserMedia.query.filter_by(user_media_id=user_media_id, user_id=current_user.user_id).first_or_404()
+        media.planned = True
+        media.planned_date = planned_date
+        media.notes = data.get('notes')
         db.session.commit()
-        return jsonify({'success': True, 'media_id': media.id})
+        return jsonify({'success': True, 'user_media_id': media.user_media_id})
     except ValueError:
         return jsonify({'success': False, 'error': 'Invalid date format'}), 400
     except Exception as e:

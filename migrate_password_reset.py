@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """
-Database migration script to add password reset functionality
-This script adds reset_token and reset_token_expiry columns to the users table
+Database migration script utilities
+ - Adds password reset columns to users table
+ - Adds planner columns to user_media table (planned_date, notes)
 """
 
 import sqlite3
@@ -64,15 +65,58 @@ def migrate_password_reset():
         print(f"❌ Error during migration: {e}")
         return False
 
+
+def migrate_user_media_planner_columns():
+    """Add planned_date and notes columns to user_media if missing"""
+    db_path = 'instance/trackify.db'
+    if not os.path.exists(db_path):
+        print(f"Database file not found at {db_path}")
+        return False
+    try:
+        conn = sqlite3.connect(db_path)
+        cursor = conn.cursor()
+        cursor.execute("PRAGMA table_info(user_media)")
+        columns = [column[1] for column in cursor.fetchall()]
+
+        if 'media_type' not in columns:
+            print("Adding media_type to user_media...")
+            cursor.execute("ALTER TABLE user_media ADD COLUMN media_type TEXT")
+            print("✓ media_type added")
+        else:
+            print("✓ media_type already exists")
+
+        if 'tags' not in columns:
+            print("Adding tags to user_media...")
+            cursor.execute("ALTER TABLE user_media ADD COLUMN tags TEXT")
+            print("✓ tags added")
+        else:
+            print("✓ tags already exists")
+
+        if 'planned_date' not in columns:
+            print("Adding planned_date to user_media...")
+            cursor.execute("ALTER TABLE user_media ADD COLUMN planned_date DATE")
+            print("✓ planned_date added")
+        else:
+            print("✓ planned_date already exists")
+
+        if 'notes' not in columns:
+            print("Adding notes to user_media...")
+            cursor.execute("ALTER TABLE user_media ADD COLUMN notes TEXT")
+            print("✓ notes added")
+        else:
+            print("✓ notes already exists")
+
+        conn.commit()
+        conn.close()
+        print("✅ user_media planner columns migration completed")
+        return True
+    except Exception as e:
+        print(f"❌ Error migrating user_media planner columns: {e}")
+        return False
+
 if __name__ == "__main__":
-    print("🔄 Starting password reset migration...")
+    print("🔄 Running migrations...")
     print("=" * 50)
-    
-    success = migrate_password_reset()
-    
-    if success:
-        print("\n🎉 Migration completed successfully!")
-        print("You can now use the password reset functionality.")
-    else:
-        print("\n💥 Migration failed!")
-        print("Please check the error messages above and try again.")
+    migrate_password_reset()
+    migrate_user_media_planner_columns()
+    print("Done.")

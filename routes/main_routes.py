@@ -168,9 +168,9 @@ def stats():
 def planner():
     # Get user's planned media
     planned_media = UserMedia.query.filter_by(
-        user_id=current_user.id,
-        status='planned'
-    ).order_by(UserMedia.planned_date).all()
+        user_id=current_user.user_id,
+        planned=True
+    ).order_by(UserMedia.planned_date.asc()).all()
     
     return render_template('planner.html', planned_media=planned_media)
 

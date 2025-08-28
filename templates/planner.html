@@ -1,5 +1,10 @@
 {% extends "base.html" %}
 
+{% block head %}
+<!-- FullCalendar CSS -->
+<link href='https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.css' rel='stylesheet' />
+{% endblock %}
+
 {% block content %}
 <div class="container mt-4">
     <div class="row">
@@ -20,7 +25,7 @@
             <div class="card">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h4>Planned Media</h4>
-                    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addMediaModal">
+                    <button type="button" class="btn btn-primary" id="addMediaBtn" style="display: none;" data-bs-toggle="modal" data-bs-target="#addMediaModal">
                         <i class="fas fa-plus"></i> Add Media
                     </button>
                 </div>
@@ -33,14 +38,17 @@
                                         <div>
                                             <h5 class="mb-1">{{ media.title }}</h5>
                                             <p class="mb-1 text-muted">
-                                                {{ media.media_type|title }} - Planned for: {{ media.planned_date.strftime('%Y-%m-%d') }}
+                                                {{ media.media_type|title }} - Planned for: {{ media.planned_date.strftime('%Y-%m-%d') if media.planned_date else 'No date' }}
                                             </p>
+                                            {% if media.notes %}
+                                                <p class="mb-1 text-muted"><small>{{ media.notes }}</small></p>
+                                            {% endif %}
                                         </div>
                                         <div class="btn-group">
-                                            <button class="btn btn-success btn-sm" onclick="markAsCompleted({{ media.id }})">
+                                            <button class="btn btn-success btn-sm" onclick="markAsCompleted({{ media.user_media_id }})">
                                                 <i class="fas fa-check"></i> Complete
                                             </button>
-                                            <button class="btn btn-danger btn-sm" onclick="removeFromPlanner({{ media.id }})">
+                                            <button class="btn btn-danger btn-sm" onclick="removeFromPlanner({{ media.user_media_id }})">
                                                 <i class="fas fa-trash"></i> Remove
                                             </button>
                                         </div>
@@ -49,7 +57,7 @@
                             {% endfor %}
                         </div>
                     {% else %}
-                        <p class="text-muted">No planned media. Add some to get started!</p>
+                        <p class="text-muted">No planned media. To add media to your planner, go to any media page and click "Add to Planner".</p>
                     {% endif %}
                 </div>
             </div>
@@ -60,7 +68,7 @@
             <div class="card">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h4>Calendar View</h4>
-                    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addMediaModal">
+                    <button type="button" class="btn btn-primary" id="addMediaBtnCalendar" style="display: none;" data-bs-toggle="modal" data-bs-target="#addMediaModal">
                         <i class="fas fa-plus"></i> Add Media
                     </button>
                 </div>
@@ -83,30 +91,27 @@
             <div class="modal-body">
                 <form id="addMediaForm">
                     <div class="mb-3">
-                        <label class="form-label">Media Type</label>
-                        <select class="form-select" name="media_type" required>
-                            <option value="book">Book</option>
-                            <option value="cinema">Movie</option>
-                            <option value="music">Music</option>
-                        </select>
+                        <label for="plannerMediaType" class="form-label">Media Type</label>
+                        <input type="text" class="form-control" id="plannerMediaType" readonly>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Title</label>
-                        <input type="text" class="form-control" name="title" required>
+                        <label for="plannerTitle" class="form-label">Title</label>
+                        <input type="text" class="form-control" id="plannerTitle" readonly>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Planned Date</label>
-                        <input type="date" class="form-control" name="planned_date" required>
+                        <label for="plannedDate" class="form-label">Planned Date</label>
+                        <input type="date" class="form-control" id="plannedDate" name="planned_date" required>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Notes (Optional)</label>
-                        <textarea class="form-control" name="notes" rows="3"></textarea>
+                        <label for="plannerNotes" class="form-label">Notes (Optional)</label>
+                        <textarea class="form-control" id="plannerNotes" name="notes" rows="3"></textarea>
                     </div>
+                    <input type="hidden" name="media_id" id="plannerMediaId">
                 </form>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-primary" onclick="addMedia()">Add to Planner</button>
+                <button type="button" class="btn btn-primary" onclick="addToPlanner()">Add to Planner</button>
             </div>
         </div>
     </div>
@@ -132,67 +137,14 @@
         </div>
     </div>
 </div>
-
 {% endblock %}
 
 {% block scripts %}
-<!-- FullCalendar CSS -->
-<link href='https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.css' rel='stylesheet' />
 <!-- FullCalendar JS -->
 <script src='https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.js'></script>
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Initialize calendar
-    const calendarEl = document.getElementById('calendar');
-    const calendar = new FullCalendar.Calendar(calendarEl, {
-        initialView: 'dayGridMonth',
-        headerToolbar: {
-            left: 'prev,next today',
-            center: 'title',
-            right: 'dayGridMonth,timeGridWeek,timeGridDay'
-        },
-        events: [
-            {% for media in planned_media %}
-            {
-                title: '{{ media.title }}',
-                start: '{{ media.planned_date.strftime("%Y-%m-%d") }}',
-                mediaType: '{{ media.media_type }}',
-                mediaId: {{ media.id }},
-                backgroundColor: getMediaTypeColor('{{ media.media_type }}'),
-                borderColor: getMediaTypeColor('{{ media.media_type }}')
-            },
-            {% endfor %}
-        ],
-        eventClick: function(info) {
-            showMediaDetails(info.event);
-        },
-        eventDrop: function(info) {
-            updateMediaDate(info.event);
-        }
-    });
-    calendar.render();
-
-    // View toggle functionality
-    const listViewBtn = document.getElementById('listViewBtn');
-    const calendarViewBtn = document.getElementById('calendarViewBtn');
-    const listView = document.getElementById('listView');
-    const calendarView = document.getElementById('calendarView');
-
-    listViewBtn.addEventListener('click', function() {
-        listView.classList.remove('d-none');
-        calendarView.classList.add('d-none');
-        listViewBtn.classList.add('active');
-        calendarViewBtn.classList.remove('active');
-    });
-
-    calendarViewBtn.addEventListener('click', function() {
-        listView.classList.add('d-none');
-        calendarView.classList.remove('d-none');
-        listViewBtn.classList.remove('active');
-        calendarViewBtn.classList.add('active');
-        calendar.render();
-    });
-});
+// Global variables and functions
+let calendar = null;
 
 function getMediaTypeColor(mediaType) {
     switch(mediaType) {
@@ -204,21 +156,21 @@ function getMediaTypeColor(mediaType) {
 }
 
 function showMediaDetails(event) {
-    // Show media details in a modal
-    const modal = new bootstrap.Modal(document.getElementById('mediaDetailsModal'));
-    document.getElementById('mediaDetailsTitle').textContent = event.title;
-    document.getElementById('mediaDetailsType').textContent = event.extendedProps.mediaType;
-    document.getElementById('mediaDetailsDate').textContent = event.start.toLocaleDateString();
-    modal.show();
+    try {
+        const modal = new bootstrap.Modal(document.getElementById('mediaDetailsModal'));
+        document.getElementById('mediaDetailsTitle').textContent = event.title;
+        document.getElementById('mediaDetailsType').textContent = event.extendedProps.mediaType;
+        document.getElementById('mediaDetailsDate').textContent = event.start.toLocaleDateString();
+        modal.show();
+    } catch (error) {
+        console.error('Error showing media details:', error);
+    }
 }
 
 function updateMediaDate(event) {
-    // Update the planned date when event is dragged
-    fetch(`/api/media/${event.extendedProps.mediaId}/update-date`, {
+    fetch(`/api/media/${event.extendedProps.userMediaId}/update-date`, {
         method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
             planned_date: event.start.toISOString().split('T')[0]
         })
@@ -226,17 +178,196 @@ function updateMediaDate(event) {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            showAlert('success', 'Date updated successfully!');
+            alert('Date updated successfully!');
         } else {
-            showAlert('error', 'Failed to update date');
-            calendar.refetchEvents();
+            alert('Failed to update date');
         }
     })
     .catch(error => {
         console.error('Error:', error);
-        showAlert('error', 'Failed to update date');
-        calendar.refetchEvents();
+        alert('Failed to update date');
     });
 }
+
+function addToPlanner() {
+    const plannedDate = document.getElementById('plannedDate').value;
+    const notes = document.getElementById('plannerNotes').value;
+    const mediaId = document.getElementById('plannerMediaId').value;
+    const mediaType = document.getElementById('plannerMediaType').value;
+
+    if (!plannedDate) {
+        alert('Please select a planned date');
+        return;
+    }
+
+    fetch('/api/media/plan', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            media_type: mediaType,
+            media_id: parseInt(mediaId),
+            planned_date: plannedDate,
+            notes: notes
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        } else {
+            alert(data.error || 'Failed to add to planner');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Failed to add to planner');
+    });
+}
+
+function markAsCompleted(userMediaId) {
+    fetch(`/api/media/${userMediaId}/complete`, { method: 'POST' })
+        .then(r => r.json())
+        .then(data => { 
+            if (data.success) location.reload(); 
+            else alert('Failed to complete'); 
+        })
+        .catch(() => alert('Failed to complete'));
+}
+
+function removeFromPlanner(userMediaId) {
+    if (confirm('Are you sure you want to remove this item from the planner?')) {
+        fetch(`/api/media/${userMediaId}/remove`, { method: 'POST' })
+            .then(r => r.json())
+            .then(data => { 
+                if (data.success) location.reload(); 
+                else alert('Failed to remove'); 
+            })
+            .catch(() => alert('Failed to remove'));
+    }
+}
+
+// Main initialization
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('Planner script loaded!');
+    
+    try {
+        // Initialize calendar
+        const calendarEl = document.getElementById('calendar');
+        if (calendarEl && typeof FullCalendar !== 'undefined') {
+            calendar = new FullCalendar.Calendar(calendarEl, {
+                initialView: 'dayGridMonth',
+                headerToolbar: {
+                    left: 'prev,next today',
+                    center: 'title',
+                    right: 'dayGridMonth,timeGridWeek,timeGridDay'
+                },
+                events: [
+                    {% if planned_media %}
+                        {% for media in planned_media %}
+                        {
+                            title: '{{ media.title }}',
+                            start: '{{ media.planned_date.strftime("%Y-%m-%d") if media.planned_date else "" }}',
+                            mediaType: '{{ media.media_type }}',
+                            userMediaId: {{ media.user_media_id }},
+                            backgroundColor: getMediaTypeColor('{{ media.media_type }}'),
+                            borderColor: getMediaTypeColor('{{ media.media_type }}')
+                        },
+                        {% endfor %}
+                    {% endif %}
+                ],
+                eventClick: function(info) {
+                    showMediaDetails(info.event);
+                },
+                eventDrop: function(info) {
+                    updateMediaDate(info.event);
+                }
+            });
+            calendar.render();
+            console.log('Calendar initialized successfully');
+        } else {
+            console.error('Calendar element or FullCalendar not available');
+        }
+    } catch (error) {
+        console.error('Error initializing calendar:', error);
+    }
+
+    // View toggle functionality
+    const listViewBtn = document.getElementById('listViewBtn');
+    const calendarViewBtn = document.getElementById('calendarViewBtn');
+    const listView = document.getElementById('listView');
+    const calendarView = document.getElementById('calendarView');
+
+    if (listViewBtn && calendarViewBtn && listView && calendarView) {
+        listViewBtn.addEventListener('click', function() {
+            listView.classList.remove('d-none');
+            calendarView.classList.add('d-none');
+            listViewBtn.classList.add('active');
+            calendarViewBtn.classList.remove('active');
+        });
+
+        calendarViewBtn.addEventListener('click', function() {
+            listView.classList.add('d-none');
+            calendarView.classList.remove('d-none');
+            calendarViewBtn.classList.add('active');
+            listViewBtn.classList.remove('active');
+            if (calendar) calendar.render();
+        });
+    }
+
+    // Auto-fill planner modal from URL parameters
+    const params = new URLSearchParams(window.location.search);
+    const mediaType = params.get('media_type');
+    const mediaId = params.get('media_id');
+    const mediaTitle = params.get('media_title');
+    
+    console.log('URL params:', { mediaType, mediaId, mediaTitle });
+    
+    if (mediaType && mediaId && mediaTitle) {
+        console.log('Media detected, preparing modal...');
+        
+        // Show the Add Media button
+        const addBtn = document.getElementById('addMediaBtn');
+        const addBtnCalendar = document.getElementById('addMediaBtnCalendar');
+        if (addBtn) addBtn.style.display = 'inline-block';
+        if (addBtnCalendar) addBtnCalendar.style.display = 'inline-block';
+        
+        // Pre-fill the form
+        const typeField = document.getElementById('plannerMediaType');
+        const titleField = document.getElementById('plannerTitle');
+        const idField = document.getElementById('plannerMediaId');
+        
+        if (typeField) typeField.value = mediaType;
+        if (titleField) titleField.value = mediaTitle;
+        if (idField) idField.value = mediaId;
+        
+        console.log('Form filled, opening modal...');
+        
+        // Open the modal automatically
+        setTimeout(() => {
+            const modalElement = document.getElementById('addMediaModal');
+            if (modalElement) {
+                console.log('Modal element found, opening...');
+                try {
+                    if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+                        const modal = new bootstrap.Modal(modalElement);
+                        modal.show();
+                        console.log('Modal opened successfully!');
+                    } else {
+                        console.error('Bootstrap Modal not available!');
+                        modalElement.style.display = 'block';
+                        modalElement.classList.add('show');
+                        document.body.classList.add('modal-open');
+                    }
+                } catch (error) {
+                    console.error('Error opening modal:', error);
+                }
+            } else {
+                console.error('Modal element not found!');
+            }
+        }, 200);
+    } else {
+        console.log('No media params detected');
+    }
+});
 </script>
 {% endblock %} 
